@@ -2,16 +2,16 @@ window.Game = window.Game || {};
 
 Game.Achievements = (function () {
   const LIST = [
-    { id: 'firstBlood',    name: 'First Blood',        icon: '🩸', check: function (d) { return Game.Generators.totalOwned() >= 1; } },
-    { id: 'bladeInitiate', name: 'Blade Initiate',     icon: '🗡',  check: function (d) { return Game.Generators.totalOwned() >= 10; } },
-    { id: 'monsterSlayer', name: 'Monster Slayer',     icon: '👹', check: function (d) { return d.lifetimeEssence >= 1000; } },
-    { id: 'riftBreaker',   name: 'Rift Breaker',       icon: '🌀', check: function (d) { return d.lifetimeEssence >= 1000000; } },
-    { id: 'legionCommander', name: 'Legion Commander', icon: '🏴', check: function (d) { return Game.Generators.maxOwnedOfAny() >= 25; } },
-    { id: 'nightsEdge',    name: "Night's Edge",       icon: '🌑', check: function (d) { return Game.Generators.ownsAllTiers(); } },
-    { id: 'firstReforge',  name: 'First Reforge',      icon: '⚔',  check: function (d) { return d.prestigeCount >= 1; } },
-    { id: 'ascended',      name: 'Ascended',           icon: '💠', check: function (d) { return d.bladeShards >= 10; } },
-    { id: 'idleSlayer',    name: 'Idle Slayer',        icon: '⏳', check: function (d) { return d.longestOfflineClaimSeconds >= 3600; } },
-    { id: 'wavesSurvived100', name: 'Waves Survived: 100', icon: '🛡', check: function (d) { return d.prestigeCount >= 100; } }
+    { id: 'firstHunt',       name: 'First Hunt',        icon: '🗡',  check: function (d) { return d.totalRuns >= 1; } },
+    { id: 'fullClear',       name: 'Full Clear',        icon: '🛡',  check: function (d) { return d.fullClearRuns >= 1; } },
+    { id: 'waveRider',       name: 'Wave Rider',        icon: '⚡', check: function (d) { return d.bestRunLevel >= 10; } },
+    { id: 'slayersMark',     name: "Slayer's Mark",     icon: '👹', check: function (d) { return d.bestRunKills >= 100; } },
+    { id: 'gemHoarder',      name: 'Gem Hoarder',       icon: '💎', check: function (d) { return d.lifetimeGemsCollected >= 500; } },
+    { id: 'shardCollector',  name: 'Shard Collector',   icon: '🔶', check: function (d) { return d.lifetimeShardsCollected >= 100; } },
+    { id: 'warlordsBane',    name: "Warlord's Bane",    icon: '🏴', check: function (d) { return d.warlordsKilled >= 1; } },
+    { id: 'arsenalComplete', name: 'Arsenal Complete',  icon: '⚔',  check: function (d) { return Game.Camp.allWeaponsUnlocked(); } },
+    { id: 'firstReforge',    name: 'First Reforge',     icon: '💠', check: function (d) { return d.prestigeCount >= 1; } },
+    { id: 'ironWill',        name: 'Iron Will',         icon: '🩸', check: function (d) { return d.closeCallRuns >= 1; } }
   ];
 
   let onUnlock = null;

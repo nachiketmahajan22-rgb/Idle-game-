@@ -1,19 +1,14 @@
 window.Game = window.Game || {};
 
 Game.Ads = (function () {
+  // Replace with your real AdMob Rewarded Ad Unit ID before release (see README.md / docs/PUBLISHING.md).
   const REWARD_UNIT_ID = 'ca-app-pub-6189670769513289/6151875722';
 
   const BOOSTS = {
-    bladeFrenzy: { name: 'Blade Frenzy', kind: 'duration', durationSec: 600,  cooldownSec: 1200, productionMult: 2, clickMult: 1 },
-    riftSurge:   { name: 'Rift Surge',   kind: 'instant',  durationSec: 0,    cooldownSec: 1800, instantSeconds: 1800 },
-    goldenEdge:  { name: 'Golden Edge',  kind: 'duration', durationSec: 300,  cooldownSec: 900,  productionMult: 1, clickMult: 3 }
+    revive:        { name: 'Revive',         kind: 'revive' },
+    headStart:     { name: 'Head Start',     kind: 'preRun',  cooldownSec: 1200, weaponLevelBonus: 2, xpFillPct: 0.30 },
+    doubleRewards: { name: 'Double Rewards', kind: 'postRun', essenceMultiplier: 2 }
   };
-
-  let onBoostGranted = null;
-
-  function setOnBoostGranted(callback) {
-    onBoostGranted = callback;
-  }
 
   function isAvailable() {
     return !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform() &&
@@ -21,83 +16,52 @@ Game.Ads = (function () {
   }
 
   // Fires the platform rewarded-ad flow. onReward is only invoked if the user
-  // actually watched to completion — never grant currency optimistically.
-  function showRewarded(boostId, onReward) {
-    if (!isAvailable()) return;
+  // actually watched to completion — never grant a reward optimistically.
+  // Callers own what the reward actually does (revive/head-start/double-rewards
+  // all have very different effects, so there's no single generic "apply" here).
+  // onFailure (optional) fires on no-fill/cancel/error - callers that gate a state
+  // transition on the outcome (e.g. the revive death-prompt) need this to avoid
+  // getting stuck waiting forever for a reward that's never coming.
+  function showRewarded(boostId, onReward, onFailure) {
+    if (!isAvailable()) {
+      if (onFailure) onFailure(boostId);
+      return;
+    }
     const AdMob = window.Capacitor.Plugins.AdMob;
     AdMob.prepareRewardVideoAd({ adId: REWARD_UNIT_ID })
       .then(function () { return AdMob.showRewardVideoAd(); })
       .then(function (result) {
         if (result && result.type) onReward(boostId);
+        else if (onFailure) onFailure(boostId);
       })
-      .catch(function () { /* ad unfilled/cancelled/failed - no reward, no-op */ });
+      .catch(function () { if (onFailure) onFailure(boostId); });
   }
 
-  function boostState(boostId) {
-    return Game.State.data.boosts[boostId];
-  }
-
-  function isActive(boostId, now) {
+  // Head Start is the only boost with a persistent cross-run cooldown (Revive is
+  // gated to once-per-run in-memory by arena.js; Double Rewards is naturally
+  // gated to once-per-run by only appearing on the results screen).
+  function canUseHeadStart(now) {
     const t = now || Date.now();
-    return t < boostState(boostId).activeUntil;
+    return isAvailable() && t >= Game.State.data.boosts.headStart.availableAfter;
   }
 
-  function isOnCooldown(boostId, now) {
+  function markHeadStartUsed(now) {
     const t = now || Date.now();
-    return t < boostState(boostId).availableAfter;
-  }
-
-  function canWatch(boostId, now) {
-    return isAvailable() && !isOnCooldown(boostId, now || Date.now());
-  }
-
-  function getProductionMultiplier(now) {
-    const t = now || Date.now();
-    let mult = 1;
-    if (isActive('bladeFrenzy', t)) mult *= BOOSTS.bladeFrenzy.productionMult;
-    return mult;
-  }
-
-  function getClickMultiplier(now) {
-    const t = now || Date.now();
-    let mult = 1;
-    if (isActive('goldenEdge', t)) mult *= BOOSTS.goldenEdge.clickMult;
-    return mult;
-  }
-
-  function applyReward(boostId) {
-    const def = BOOSTS[boostId];
-    const now = Date.now();
-    const st = boostState(boostId);
-    st.availableAfter = now + def.cooldownSec * 1000;
-
-    if (def.kind === 'duration') {
-      st.activeUntil = now + def.durationSec * 1000;
-    } else if (def.kind === 'instant') {
-      const rate = Game.Generators.rawProductionPerSecond() *
-        Game.Prestige.getEssenceMultiplier() *
-        Game.Achievements.getMultiplier();
-      Game.State.addEssence(rate * def.instantSeconds);
-    }
-
+    Game.State.data.boosts.headStart.availableAfter = t + BOOSTS.headStart.cooldownSec * 1000;
     Game.Save.save();
-    if (onBoostGranted) onBoostGranted(boostId, def);
   }
 
-  function watchBoost(boostId) {
-    if (!canWatch(boostId)) return;
-    showRewarded(boostId, applyReward);
+  function headStartCooldownRemaining(now) {
+    const t = now || Date.now();
+    return Math.max(0, (Game.State.data.boosts.headStart.availableAfter - t) / 1000);
   }
 
   return {
     BOOSTS: BOOSTS,
-    setOnBoostGranted: setOnBoostGranted,
     isAvailable: isAvailable,
-    isActive: isActive,
-    isOnCooldown: isOnCooldown,
-    canWatch: canWatch,
-    getProductionMultiplier: getProductionMultiplier,
-    getClickMultiplier: getClickMultiplier,
-    watchBoost: watchBoost
+    showRewarded: showRewarded,
+    canUseHeadStart: canUseHeadStart,
+    markHeadStartUsed: markHeadStartUsed,
+    headStartCooldownRemaining: headStartCooldownRemaining
   };
 })();

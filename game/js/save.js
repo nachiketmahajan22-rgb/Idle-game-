@@ -3,7 +3,6 @@ window.Game = window.Game || {};
 Game.Save = (function () {
   const STORAGE_KEY = 'bladeHunterIdle_save_v1';
   const MAX_OFFLINE_MS = 8 * 60 * 60 * 1000;
-  const OFFLINE_EFFICIENCY = 0.5;
 
   function load() {
     try {
@@ -32,8 +31,8 @@ Game.Save = (function () {
     const elapsedSeconds = cappedMs / 1000;
     if (elapsedSeconds < 1) return 0;
 
-    const rate = Game.Generators.effectiveProductionPerSecond(Date.now());
-    const earned = rate * elapsedSeconds * OFFLINE_EFFICIENCY;
+    const elapsedHours = elapsedSeconds / 3600;
+    const earned = Game.Camp.getTrickleEssencePerHour() * elapsedHours * Game.Achievements.getMultiplier();
 
     if (earned > 0) {
       Game.State.addEssence(earned);

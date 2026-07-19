@@ -1,6 +1,6 @@
 # Blade Hunter: Idle Slayer
 
-A dark-fantasy incremental/idle game — tap to strike, recruit blade hunters and rift turrets to grind Essence automatically, unlock achievements, and Reforge the Blade to prestige for permanent power. Visual theme is a Survivor.io-inspired blade-hunter-vs-monsters reskin on top of a classic clicker/incremental core loop (not a bullet-heaven combat sim).
+A dark-fantasy bullet-heaven action game in the Survivor.io / Vampire Survivors mold: drive your hunter around a real-time arena with a virtual joystick, auto-attacking weapons swarm-kill waves of monsters for you (no aiming), and you walk over dropped XP gems and Essence shards to level up mid-run and grow stronger. Each ~3-minute Hunt banks Essence into a persistent **Camp** between runs, where you buy permanent gear upgrades, unlock new weapons, chase achievements, and Reforge the Blade to prestige for a permanent multiplier on all future runs.
 
 Packaged as an Android app for the Play Store via [Capacitor](https://capacitorjs.com/), wrapping a plain HTML/CSS/JS game with no build step of its own.
 
@@ -65,7 +65,12 @@ See `docs/PUBLISHING.md` for the full Play Console submission checklist.
 
 ## Ads
 
-Rewarded video ads are **opt-in only** — no interstitials, no banners, no forced ads during play. The player taps a "Watch Ad" button to receive a temporary boost (see `game/js/ads.js` and the Boosts panel in-game). In a plain desktop browser (no Capacitor/AdMob available), these buttons render disabled so the game is fully playable ad-free during development.
+Rewarded video ads are **opt-in only** — no interstitials, no banners, no forced ads during play. Three placements, all in `game/js/ads.js`:
+- **Head Start** (Camp screen) — start a Hunt with weapons +2 levels and the XP bar 30% full.
+- **Revive** (death screen) — continue a run once after dying, at 50% HP.
+- **Double Rewards** (results screen) — double the Essence banked from the run just finished.
+
+In a plain desktop browser (no Capacitor/AdMob available), these buttons render disabled so the game is fully playable ad-free during development.
 
 ## Save data
 

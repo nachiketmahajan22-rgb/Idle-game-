@@ -8,8 +8,8 @@
 </head>
 <body>
 
-<div id="app">
-
+<!-- ======================= CAMP (hub) screen ======================= -->
+<div id="screen-camp" class="screen">
   <header id="app-header">
     <h1 id="app-title">Blade Hunter</h1>
     <div id="shards-chip" class="chip" title="Blade Shards">
@@ -18,85 +18,45 @@
     </div>
   </header>
 
-  <main id="core-loop">
-    <div id="essence-readout">
-      <div id="essence-count">0</div>
+  <main id="camp-main">
+    <div id="camp-essence-readout">
+      <div id="camp-essence-count">0</div>
       <div id="essence-label">Essence</div>
-      <div id="essence-rate">0 / sec</div>
     </div>
 
-    <div id="tap-zone">
-      <button id="tap-button" aria-label="Strike for Essence">
-        <svg viewBox="0 0 200 200" width="150" height="150" aria-hidden="true">
-          <defs>
-            <linearGradient id="bladeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stop-color="#f5f4f0"/>
-              <stop offset="60%" stop-color="#cfcdd6"/>
-              <stop offset="100%" stop-color="#8d8b96"/>
-            </linearGradient>
-          </defs>
-          <g transform="translate(100,100) rotate(-15)">
-            <rect x="-14" y="-85" width="28" height="120" rx="6" fill="url(#bladeGrad)"/>
-            <polygon points="-14,-85 14,-85 0,-115" fill="url(#bladeGrad)"/>
-            <rect x="-30" y="35" width="60" height="16" rx="6" fill="#ff2b4d"/>
-            <rect x="-11" y="51" width="22" height="45" rx="6" fill="#5a4632"/>
-          </g>
-        </svg>
-      </button>
-      <div id="tap-fx-layer" aria-hidden="true"></div>
+    <div id="hunt-launch-panel">
+      <button id="begin-hunt-btn">Begin Hunt</button>
+      <div class="boost-row">
+        <div class="boost-info">
+          <span class="boost-name">Head Start</span>
+          <span class="boost-desc">Weapons +2 levels, XP bar 30% full</span>
+        </div>
+        <button id="head-start-btn" class="boost-watch-btn" disabled>Watch Ad</button>
+        <span id="head-start-status" class="boost-status"></span>
+      </div>
     </div>
 
-    <section id="boosts-panel" aria-label="Boosts">
-      <h2 class="section-title">Boosts</h2>
-      <div class="boost-row" data-boost="bladeFrenzy">
-        <div class="boost-info">
-          <span class="boost-name">Blade Frenzy</span>
-          <span class="boost-desc">2x Essence for 10 min</span>
-        </div>
-        <button class="boost-watch-btn" data-boost-action="bladeFrenzy" disabled>Watch Ad</button>
-        <span class="boost-status" data-boost-status="bladeFrenzy"></span>
-      </div>
-      <div class="boost-row" data-boost="riftSurge">
-        <div class="boost-info">
-          <span class="boost-name">Rift Surge</span>
-          <span class="boost-desc">Instant 30 min of production</span>
-        </div>
-        <button class="boost-watch-btn" data-boost-action="riftSurge" disabled>Watch Ad</button>
-        <span class="boost-status" data-boost-status="riftSurge"></span>
-      </div>
-      <div class="boost-row" data-boost="goldenEdge">
-        <div class="boost-info">
-          <span class="boost-name">Golden Edge</span>
-          <span class="boost-desc">3x tap value for 5 min</span>
-        </div>
-        <button class="boost-watch-btn" data-boost-action="goldenEdge" disabled>Watch Ad</button>
-        <span class="boost-status" data-boost-status="goldenEdge"></span>
-      </div>
-    </section>
-
-    <nav id="tab-nav">
-      <button class="tab-btn active" data-tab="generators">Generators</button>
-      <button class="tab-btn" data-tab="stats">Stats</button>
+    <nav id="camp-tab-nav" class="tab-nav">
+      <button class="tab-btn active" data-tab="gear">Gear Shop</button>
+      <button class="tab-btn" data-tab="stats">Chronicle</button>
       <button class="tab-btn" data-tab="ascend">Ascend</button>
     </nav>
 
-    <section id="tab-generators" class="tab-panel active">
-      <h2 class="section-title">Blade Upgrades</h2>
-      <div id="upgrades-list"></div>
-      <h2 class="section-title">Recruit Hunters</h2>
-      <div id="generators-list"></div>
+    <section id="tab-gear" class="tab-panel active">
+      <h2 class="section-title">Permanent Gear</h2>
+      <div id="gear-shop-list"></div>
     </section>
 
     <section id="tab-stats" class="tab-panel">
       <h2 class="section-title">Chronicle</h2>
-      <div id="stats-grid"></div>
+      <div id="camp-stats-grid"></div>
       <h2 class="section-title">Achievements</h2>
-      <div id="achievements-grid"></div>
+      <div id="camp-achievements-grid"></div>
     </section>
 
     <section id="tab-ascend" class="tab-panel">
       <h2 class="section-title">Reforge the Blade</h2>
-      <p class="ascend-blurb">Shatter your blade and reforge it with rift-forged shards, permanently sharpening every strike to come. Your Essence, Hunters and Blade Upgrades reset &mdash; your Shards, Achievements and Chronicle never do.</p>
+      <p class="ascend-blurb">Shatter your blade and reforge it with rift-forged shards, permanently sharpening every future Hunt. Your Essence and Gear reset &mdash; your Shards, Achievements and Chronicle never do.</p>
       <div id="ascend-stats">
         <div class="ascend-row"><span>Current Blade Shards</span><span id="shards-current">0</span></div>
         <div class="ascend-row"><span>Current Multiplier</span><span id="multiplier-current">+0%</span></div>
@@ -106,6 +66,60 @@
       <button id="reforge-btn" disabled>Reforge the Blade</button>
     </section>
   </main>
+</div>
+
+<!-- ======================= HUNT (arena) screen ======================= -->
+<div id="screen-hunt" class="screen">
+  <canvas id="hunt-canvas"></canvas>
+
+  <div id="hunt-hud">
+    <div id="hud-top-row">
+      <button id="retreat-btn" title="Retreat">&#8617; Retreat</button>
+      <div id="hud-timer">03:00</div>
+      <div id="hud-essence-readout">
+        <span class="chip-icon">&#9670;</span>
+        <span id="hud-essence-estimate">0</span>
+      </div>
+    </div>
+    <div id="hud-hp-bar"><div id="hud-hp-fill"></div></div>
+    <div id="hud-hp-text">100 / 100</div>
+    <div id="hud-xp-row">
+      <span id="hud-level">Lv 1</span>
+      <div id="hud-xp-bar"><div id="hud-xp-fill"></div></div>
+      <span id="hud-kills-label">Kills: <span id="hud-kills">0</span></span>
+    </div>
+  </div>
+
+  <div id="warlord-banner" class="hidden">A Warlord approaches!</div>
+
+  <div id="joystick-base" class="joystick-base hidden"></div>
+  <div id="joystick-knob" class="joystick-knob hidden"></div>
+</div>
+
+<!-- ======================= Modals ======================= -->
+<div id="levelup-modal" class="modal-overlay hidden">
+  <div class="modal levelup-modal-inner">
+    <h2>Choose Your Path</h2>
+    <div id="levelup-cards"></div>
+  </div>
+</div>
+
+<div id="death-modal" class="modal-overlay hidden">
+  <div class="modal">
+    <h2>You Have Fallen</h2>
+    <p>The rift claims another hunter&hellip;</p>
+    <button id="death-revive-btn" class="hidden">Watch Ad to Revive</button>
+    <button id="death-accept-btn" class="secondary">Accept Defeat</button>
+  </div>
+</div>
+
+<div id="results-modal" class="modal-overlay hidden">
+  <div class="modal">
+    <h2>Hunt Complete</h2>
+    <div id="results-stats"></div>
+    <button id="results-double-btn" class="hidden">Watch Ad: Double Rewards</button>
+    <button id="results-return-btn">Return to Camp</button>
+  </div>
 </div>
 
 <div id="offline-modal" class="modal-overlay hidden">
@@ -119,7 +133,7 @@
 <div id="reforge-modal" class="modal-overlay hidden">
   <div class="modal">
     <h2>Reforge the Blade?</h2>
-    <p>This will reset your Essence, Hunters and Blade Upgrades in exchange for <span id="reforge-modal-shards">0</span> Blade Shards.</p>
+    <p>This will reset your Essence and Gear in exchange for <span id="reforge-modal-shards">0</span> Blade Shards.</p>
     <div class="modal-actions">
       <button id="reforge-cancel-btn" class="secondary">Cancel</button>
       <button id="reforge-confirm-btn">Reforge</button>
@@ -131,12 +145,19 @@
 
 <script src="js/utils.js"></script>
 <script src="js/state.js"></script>
-<script src="js/generators.js"></script>
-<script src="js/upgrades.js"></script>
-<script src="js/achievements.js"></script>
+<script src="js/camp.js"></script>
 <script src="js/prestige.js"></script>
+<script src="js/achievements.js"></script>
 <script src="js/ads.js"></script>
 <script src="js/save.js"></script>
+<script src="js/player.js"></script>
+<script src="js/weapons.js"></script>
+<script src="js/enemies.js"></script>
+<script src="js/pickups.js"></script>
+<script src="js/joystick.js"></script>
+<script src="js/arena.js"></script>
+<script src="js/ui-camp.js"></script>
+<script src="js/ui-hunt.js"></script>
 <script src="js/ui.js"></script>
 <script src="js/main.js"></script>
 </body>

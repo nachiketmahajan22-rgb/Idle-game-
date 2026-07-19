@@ -1,7 +1,10 @@
 window.Game = window.Game || {};
 
 Game.Prestige = (function () {
-  const LIFETIME_ESSENCE_PER_SHARD_SQRT = 100000;
+  // Rescaled for the run-based economy (a full 180s run nets roughly 90-120 raw
+  // Essence, not the millions/billions the old passive-generator economy produced) -
+  // 1500 puts the first shard within reach after ~15 runs rather than ~1000.
+  const LIFETIME_ESSENCE_PER_SHARD_SQRT = 1500;
   const MULTIPLIER_PER_SHARD = 0.02;
 
   // Total shards the player's current lifetime earnings "justify" — not a per-reforge
@@ -35,8 +38,7 @@ Game.Prestige = (function () {
     d.bladeShards += gained;
     d.prestigeCount += 1;
     d.essence = 0;
-    Game.Generators.LIST.forEach(function (g) { d.generators[g.id] = 0; });
-    d.clickUpgrades = [];
+    Game.Camp.LIST.forEach(function (c) { d.gear[c.id] = 0; });
 
     Game.Achievements.checkAll();
     return true;
