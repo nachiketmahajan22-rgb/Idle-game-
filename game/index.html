@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Blade Hunter: Idle Slayer</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="app">
+
+  <header id="app-header">
+    <h1 id="app-title">Blade Hunter</h1>
+    <div id="shards-chip" class="chip" title="Blade Shards">
+      <span class="chip-icon">&#9670;</span>
+      <span id="blade-shards-chip">0</span>
+    </div>
+  </header>
+
+  <main id="core-loop">
+    <div id="essence-readout">
+      <div id="essence-count">0</div>
+      <div id="essence-label">Essence</div>
+      <div id="essence-rate">0 / sec</div>
+    </div>
+
+    <div id="tap-zone">
+      <button id="tap-button" aria-label="Strike for Essence">
+        <svg viewBox="0 0 200 200" width="150" height="150" aria-hidden="true">
+          <defs>
+            <linearGradient id="bladeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#f5f4f0"/>
+              <stop offset="60%" stop-color="#cfcdd6"/>
+              <stop offset="100%" stop-color="#8d8b96"/>
+            </linearGradient>
+          </defs>
+          <g transform="translate(100,100) rotate(-15)">
+            <rect x="-14" y="-85" width="28" height="120" rx="6" fill="url(#bladeGrad)"/>
+            <polygon points="-14,-85 14,-85 0,-115" fill="url(#bladeGrad)"/>
+            <rect x="-30" y="35" width="60" height="16" rx="6" fill="#ff2b4d"/>
+            <rect x="-11" y="51" width="22" height="45" rx="6" fill="#5a4632"/>
+          </g>
+        </svg>
+      </button>
+      <div id="tap-fx-layer" aria-hidden="true"></div>
+    </div>
+
+    <section id="boosts-panel" aria-label="Boosts">
+      <h2 class="section-title">Boosts</h2>
+      <div class="boost-row" data-boost="bladeFrenzy">
+        <div class="boost-info">
+          <span class="boost-name">Blade Frenzy</span>
+          <span class="boost-desc">2x Essence for 10 min</span>
+        </div>
+        <button class="boost-watch-btn" data-boost-action="bladeFrenzy" disabled>Watch Ad</button>
+        <span class="boost-status" data-boost-status="bladeFrenzy"></span>
+      </div>
+      <div class="boost-row" data-boost="riftSurge">
+        <div class="boost-info">
+          <span class="boost-name">Rift Surge</span>
+          <span class="boost-desc">Instant 30 min of production</span>
+        </div>
+        <button class="boost-watch-btn" data-boost-action="riftSurge" disabled>Watch Ad</button>
+        <span class="boost-status" data-boost-status="riftSurge"></span>
+      </div>
+      <div class="boost-row" data-boost="goldenEdge">
+        <div class="boost-info">
+          <span class="boost-name">Golden Edge</span>
+          <span class="boost-desc">3x tap value for 5 min</span>
+        </div>
+        <button class="boost-watch-btn" data-boost-action="goldenEdge" disabled>Watch Ad</button>
+        <span class="boost-status" data-boost-status="goldenEdge"></span>
+      </div>
+    </section>
+
+    <nav id="tab-nav">
+      <button class="tab-btn active" data-tab="generators">Generators</button>
+      <button class="tab-btn" data-tab="stats">Stats</button>
+      <button class="tab-btn" data-tab="ascend">Ascend</button>
+    </nav>
+
+    <section id="tab-generators" class="tab-panel active">
+      <h2 class="section-title">Blade Upgrades</h2>
+      <div id="upgrades-list"></div>
+      <h2 class="section-title">Recruit Hunters</h2>
+      <div id="generators-list"></div>
+    </section>
+
+    <section id="tab-stats" class="tab-panel">
+      <h2 class="section-title">Chronicle</h2>
+      <div id="stats-grid"></div>
+      <h2 class="section-title">Achievements</h2>
+      <div id="achievements-grid"></div>
+    </section>
+
+    <section id="tab-ascend" class="tab-panel">
+      <h2 class="section-title">Reforge the Blade</h2>
+      <p class="ascend-blurb">Shatter your blade and reforge it with rift-forged shards, permanently sharpening every strike to come. Your Essence, Hunters and Blade Upgrades reset &mdash; your Shards, Achievements and Chronicle never do.</p>
+      <div id="ascend-stats">
+        <div class="ascend-row"><span>Current Blade Shards</span><span id="shards-current">0</span></div>
+        <div class="ascend-row"><span>Current Multiplier</span><span id="multiplier-current">+0%</span></div>
+        <div class="ascend-row highlight"><span>Shards on Reforge</span><span id="shards-projected">0</span></div>
+        <div class="ascend-row highlight"><span>New Multiplier</span><span id="multiplier-projected">+0%</span></div>
+      </div>
+      <button id="reforge-btn" disabled>Reforge the Blade</button>
+    </section>
+  </main>
+</div>
+
+<div id="offline-modal" class="modal-overlay hidden">
+  <div class="modal">
+    <h2>While You Were Away</h2>
+    <p id="offline-text"></p>
+    <button id="offline-close-btn">Claim</button>
+  </div>
+</div>
+
+<div id="reforge-modal" class="modal-overlay hidden">
+  <div class="modal">
+    <h2>Reforge the Blade?</h2>
+    <p>This will reset your Essence, Hunters and Blade Upgrades in exchange for <span id="reforge-modal-shards">0</span> Blade Shards.</p>
+    <div class="modal-actions">
+      <button id="reforge-cancel-btn" class="secondary">Cancel</button>
+      <button id="reforge-confirm-btn">Reforge</button>
+    </div>
+  </div>
+</div>
+
+<div id="achievement-toast" class="toast hidden"></div>
+
+<script src="js/utils.js"></script>
+<script src="js/state.js"></script>
+<script src="js/generators.js"></script>
+<script src="js/upgrades.js"></script>
+<script src="js/achievements.js"></script>
+<script src="js/prestige.js"></script>
+<script src="js/ads.js"></script>
+<script src="js/save.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>

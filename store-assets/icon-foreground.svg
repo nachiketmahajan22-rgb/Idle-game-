@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 108 108" width="108" height="108">
+  <defs>
+    <linearGradient id="fgBladeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f5f4f0"/>
+      <stop offset="60%" stop-color="#cfcdd6"/>
+      <stop offset="100%" stop-color="#8d8b96"/>
+    </linearGradient>
+  </defs>
+  <!-- Single blade, matching the in-game tap button. Scaled + kept within the
+       ~66dp adaptive-icon safe zone centered on this 108x108 canvas. -->
+  <g transform="translate(54,54) scale(0.26) rotate(-15)">
+    <rect x="-14" y="-85" width="28" height="120" rx="6" fill="url(#fgBladeGrad)"/>
+    <polygon points="-14,-85 14,-85 0,-115" fill="url(#fgBladeGrad)"/>
+    <rect x="-30" y="35" width="60" height="16" rx="6" fill="#ff2b4d"/>
+    <rect x="-11" y="51" width="22" height="45" rx="6" fill="#5a4632"/>
+  </g>
+</svg>
