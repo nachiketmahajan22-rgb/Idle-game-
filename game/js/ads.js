@@ -1,8 +1,7 @@
 window.Game = window.Game || {};
 
 Game.Ads = (function () {
-  // Replace with a real AdMob Rewarded Ad Unit ID before release (see README.md / docs/PUBLISHING.md).
-  const REWARD_UNIT_ID = 'ca-app-pub-0000000000000000/0000000000';
+  const REWARD_UNIT_ID = 'ca-app-pub-6189670769513289/6151875722';
 
   const BOOSTS = {
     bladeFrenzy: { name: 'Blade Frenzy', kind: 'duration', durationSec: 600,  cooldownSec: 1200, productionMult: 2, clickMult: 1 },
