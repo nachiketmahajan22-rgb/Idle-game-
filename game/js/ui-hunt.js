@@ -58,8 +58,8 @@ Game.UIHunt = (function () {
       const bits = ['+' + dmgPct + '% dmg'];
 
       if (card.id === 'bladeAcolyte') {
-        const countNow = Game.Weapons.bladeCountAt(w.level);
-        const countNext = Game.Weapons.bladeCountAt(next);
+        const countNow = Game.Weapons.bladeCountAt(w.level, w.evolved);
+        const countNext = Game.Weapons.bladeCountAt(next, w.evolved);
         if (countNext > countNow) bits.unshift('+1 blade (' + countNext + ' total)');
       } else if (card.id === 'shadowBlade') {
         const pierceNow = Game.Weapons.pierceAt(w.level);
@@ -77,7 +77,12 @@ Game.UIHunt = (function () {
         if (Game.Weapons.cathedralRadiusAt(next) > Game.Weapons.cathedralRadiusAt(w.level)) bits.push('+radius');
       }
 
-      return { icon: def.icon, title: def.name + ' Lv ' + next, desc: bits.join(' · ') };
+      const evo = Game.Weapons.evolutionFor(card.id);
+      if (evo && !w.evolved) {
+        bits.push('evolves Lv' + evo.requiredLevel + '+' + Game.Player.PASSIVE_INFO[evo.passiveId].name);
+      }
+
+      return { icon: Game.Weapons.displayIcon(w), title: Game.Weapons.displayName(w) + ' Lv ' + next, desc: bits.join(' · ') };
     }
     if (card.type === 'passive') {
       const info = Game.Player.PASSIVE_INFO[card.id];
@@ -114,7 +119,7 @@ Game.UIHunt = (function () {
     Game.Arena.onLevelUp(showLevelUp);
     Game.Arena.onDeathPrompt(showDeathPrompt);
     Game.Arena.onResults(showResults);
-    Game.Arena.onWarlordBanner(showWarlordBanner);
+    Game.Arena.onPhaseBanner(showPhaseBanner);
     Game.Arena.onRevived(hideDeathModal);
     Game.Arena.onNotify(showToast);
   }
@@ -182,7 +187,8 @@ Game.UIHunt = (function () {
     els.resultsModal.classList.remove('hidden');
   }
 
-  function showWarlordBanner() {
+  function showPhaseBanner(text) {
+    els.warlordBanner.textContent = text;
     els.warlordBanner.classList.remove('hidden');
     els.warlordBanner.style.animation = 'none';
     void els.warlordBanner.offsetWidth;

@@ -26,7 +26,7 @@ Game.Arena = (function () {
   let levelUpCallback = null;
   let deathPromptCallback = null;
   let resultsCallback = null;
-  let warlordBannerCallback = null;
+  let phaseBannerCallback = null;
   let revivedCallback = null;
   let notifyCallback = null;
 
@@ -37,12 +37,58 @@ Game.Arena = (function () {
   function onLevelUp(cb) { levelUpCallback = cb; }
   function onDeathPrompt(cb) { deathPromptCallback = cb; }
   function onResults(cb) { resultsCallback = cb; }
-  function onWarlordBanner(cb) { warlordBannerCallback = cb; }
+  function onPhaseBanner(cb) { phaseBannerCallback = cb; }
   function onRevived(cb) { revivedCallback = cb; }
   function onNotify(cb) { notifyCallback = cb; }
 
   function xpToNext(level) {
     return Math.round(25 * Math.pow(level, 1.4));
+  }
+
+  const CHEST_COIN_AMOUNT = 30;
+
+  // Mystery reward roll for a collected treasure chest: health, a burst of
+  // Swarajya, or an instant free skill. The "skill" branch mirrors the
+  // level-up card's own candidate pool (level up an owned weapon, unlock a
+  // new one if a slot is free, or stack a passive) so a chest can hand out
+  // a whole new weapon, not just a level, same as Survivor.io's boss chests.
+  function grantRandomSkillReward() {
+    const leveledId = Game.Weapons.levelUpRandomEquipped();
+    if (leveledId) return Game.Weapons.DEFS[leveledId].name + ' surged to Lv ' + Game.Weapons.get(leveledId).level + '!';
+
+    if (Game.Weapons.canEquipMore()) {
+      const unequipped = Game.Weapons.WEAPON_IDS.filter(function (id) {
+        return !Game.Weapons.hasEquipped(id) && Game.Camp.isWeaponUnlocked(id);
+      });
+      if (unequipped.length > 0) {
+        const pick = unequipped[Math.floor(Math.random() * unequipped.length)];
+        Game.Weapons.addWeapon(pick);
+        return 'New weapon: ' + Game.Weapons.DEFS[pick].name + '!';
+      }
+    }
+
+    const stackable = Game.Player.PASSIVE_IDS.filter(Game.Player.canStackPassive);
+    if (stackable.length > 0) {
+      const pick = stackable[Math.floor(Math.random() * stackable.length)];
+      Game.Player.applyPassive(pick);
+      return Game.Player.PASSIVE_INFO[pick].name + ' gained!';
+    }
+
+    Game.State.addEssence(CHEST_COIN_AMOUNT);
+    return '+' + CHEST_COIN_AMOUNT + ' Swarajya (all skills maxed)';
+  }
+
+  function openChest() {
+    const roll = Math.random();
+    if (roll < 0.4) {
+      Game.Player.heal(Game.Pickups.HEART_HEAL_AMOUNT);
+      return '+' + Game.Pickups.HEART_HEAL_AMOUNT + ' HP';
+    }
+    if (roll < 0.7) {
+      Game.State.addEssence(CHEST_COIN_AMOUNT);
+      return '+' + CHEST_COIN_AMOUNT + ' Swarajya';
+    }
+    return grantRandomSkillReward();
   }
 
   function init(canvasEl) {
@@ -99,8 +145,8 @@ Game.Arena = (function () {
     Game.Enemies.startRun();
     Game.Pickups.startRun();
     Game.Enemies.setOnKill(handleEnemyKilled);
-    Game.Enemies.setOnWarlordApproach(function () {
-      if (warlordBannerCallback) warlordBannerCallback();
+    Game.Enemies.setOnPhaseAnnounce(function (text) {
+      if (phaseBannerCallback) phaseBannerCallback(text);
     });
 
     const player = Game.Player.createRunPlayer();
@@ -186,6 +232,11 @@ Game.Arena = (function () {
     Game.Enemies.update(dt, now, run.elapsed, player);
     Game.Weapons.update(dt, now, player);
 
+    Game.Weapons.drainEvolutionNotices().forEach(function (weaponId) {
+      const evo = Game.Weapons.evolutionFor(weaponId);
+      if (evo && notifyCallback) notifyCallback(evo.icon + ' Evolved: ' + evo.name + '!');
+    });
+
     const pickupResult = Game.Pickups.update(dt, now, player, Game.Player.pickupRadius());
     run.xp += pickupResult.xpGained;
     run.gemsCollected += pickupResult.gemsCollected;
@@ -200,6 +251,9 @@ Game.Arena = (function () {
       if (leveledId && notifyCallback) {
         notifyCallback(Game.Weapons.DEFS[leveledId].name + ' surged to Lv ' + Game.Weapons.get(leveledId).level + '!');
       }
+    }
+    for (let i = 0; i < pickupResult.chestsCollected; i++) {
+      if (notifyCallback) notifyCallback('Chest: ' + openChest());
     }
 
     while (run.xp >= xpToNext(run.level)) {
@@ -595,7 +649,7 @@ Game.Arena = (function () {
     // evenly-spaced blades (see Game.Weapons.bladeCountAt), so the weapon's
     // growth is visible, not just a bigger number.
     const talwar = Game.Weapons.get('bladeAcolyte');
-    const bladeCount = talwar ? Game.Weapons.bladeCountAt(talwar.level) : 1;
+    const bladeCount = talwar ? Game.Weapons.bladeCountAt(talwar.level, talwar.evolved) : 1;
     for (let i = 0; i < bladeCount; i++) {
       const bladeAngle = angle + (Math.PI * 2 * i) / bladeCount;
       ctx.save();
@@ -736,6 +790,39 @@ Game.Arena = (function () {
       ctx.closePath();
       ctx.fill();
     });
+
+    Game.Pickups.getChests().forEach(function (chest) {
+      const p = worldToScreen(chest.x, chest.y, cx, cy);
+      if (p.x < 0 || p.x > w || p.y < 0 || p.y > h) return;
+
+      ctx.save();
+      ctx.globalAlpha = 0.35 * pulse;
+      ctx.fillStyle = '#ffd23f';
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 20, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+      const w2 = 15, h2 = 11;
+      ctx.fillStyle = radialShade(p.x, p.y + 2, 10, '#8a5a2a', 0.35);
+      ctx.fillRect(p.x - w2 / 2, p.y - h2 / 2 + 3, w2, h2 - 3);
+      ctx.strokeStyle = 'rgba(0,0,0,0.55)';
+      ctx.lineWidth = 1.3;
+      ctx.strokeRect(p.x - w2 / 2, p.y - h2 / 2 + 3, w2, h2 - 3);
+
+      ctx.fillStyle = radialShade(p.x, p.y - h2 / 2, 9, '#c9a227', 0.4);
+      ctx.beginPath();
+      ctx.moveTo(p.x - w2 / 2, p.y - h2 / 2 + 3);
+      ctx.lineTo(p.x - w2 / 2, p.y - h2 / 2);
+      ctx.quadraticCurveTo(p.x, p.y - h2 / 2 - 5, p.x + w2 / 2, p.y - h2 / 2);
+      ctx.lineTo(p.x + w2 / 2, p.y - h2 / 2 + 3);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = '#ffd23f';
+      ctx.fillRect(p.x - 1.5, p.y - h2 / 2 + 2, 3, 5);
+    });
   }
 
   function drawWeaponEffects(cx, cy) {
@@ -792,7 +879,7 @@ Game.Arena = (function () {
     onLevelUp: onLevelUp,
     onDeathPrompt: onDeathPrompt,
     onResults: onResults,
-    onWarlordBanner: onWarlordBanner,
+    onPhaseBanner: onPhaseBanner,
     onRevived: onRevived,
     onNotify: onNotify
   };

@@ -3,6 +3,9 @@ window.Game = window.Game || {};
 Game.Weapons = (function () {
   const MAX_EQUIPPED = 4;
   const MAX_PROJECTILES = 200;
+  const EVOLVED_DAMAGE_MULT = 1.5;
+  const TURRET_KILL_HEAL = 2;
+  const KNOCKBACK_FORCE = 140;
 
   const DEFS = {
     bladeAcolyte: {
@@ -50,10 +53,24 @@ Game.Weapons = (function () {
 
   const WEAPON_IDS = Object.keys(DEFS);
 
+  // Survivor.io-style evolution: hit the level requirement AND already own
+  // the paired passive, and the weapon permanently transforms - a stronger
+  // unique version with one new bit of behavior, not just bigger numbers.
+  // Checked every frame in update(); notifications drain via
+  // drainEvolutionNotices() so arena.js can toast them the moment it happens.
+  const EVOLUTIONS = {
+    bladeAcolyte: { requiredLevel: 6, passiveId: 'momentum', name: "Raigad's Wrath", icon: '🔥', desc: '+1 blade, burns on hit' },
+    shadowBlade: { requiredLevel: 6, passiveId: 'quickening', name: 'Shadow Fang Volley', icon: '🌙', desc: '+1 dagger, infinite pierce' },
+    riftTurret: { requiredLevel: 6, passiveId: 'vitality', name: 'Fortress of Raigad', icon: '🏯', desc: '+1 tower, kills heal you' },
+    bloodHoundPack: { requiredLevel: 6, passiveId: 'swiftBoots', name: 'Ashwa Sena', icon: '🐎', desc: '2x orbit speed, +1 Mavla, knockback' },
+    cursedCathedral: { requiredLevel: 6, passiveId: 'essenceSense', name: 'Thunder of the Sahyadris', icon: '⚡', desc: '+50% radius, half cooldown' }
+  };
+
   let equipped = [];
   let runtime = {};
   let projectiles = [];
   let pulses = [];
+  let pendingEvolutions = [];
 
   function damageAt(id, level) {
     const def = DEFS[id];
@@ -71,11 +88,12 @@ Game.Weapons = (function () {
     return bonus;
   }
 
-  function bladeCountAt(level) {
+  function bladeCountAt(level, evolved) {
     const def = DEFS.bladeAcolyte;
     let count = 1;
     def.bladeCountLevels.forEach(function (lvl) { if (level >= lvl) count += 1; });
-    return Math.min(def.maxBladeCount, count);
+    count = Math.min(def.maxBladeCount, count);
+    return evolved ? count + 1 : count;
   }
 
   function pierceAt(level) {
@@ -134,7 +152,7 @@ Game.Weapons = (function () {
 
   function addWeapon(id) {
     if (!canEquipMore() || hasEquipped(id)) return false;
-    equipped.push({ id: id, level: 1 });
+    equipped.push({ id: id, level: 1, evolved: false });
     initRuntimeFor(id);
     return true;
   }
@@ -156,6 +174,44 @@ Game.Weapons = (function () {
     return w.id;
   }
 
+  function evolvedDamageMult(w) {
+    return w.evolved ? EVOLVED_DAMAGE_MULT : 1;
+  }
+
+  function displayName(w) {
+    return w.evolved ? EVOLUTIONS[w.id].name : DEFS[w.id].name;
+  }
+
+  function displayIcon(w) {
+    return w.evolved ? EVOLUTIONS[w.id].icon : DEFS[w.id].icon;
+  }
+
+  function evolutionFor(id) {
+    return EVOLUTIONS[id] || null;
+  }
+
+  // Checked every frame - cheap (at most MAX_EQUIPPED comparisons) - so an
+  // evolution triggers the instant its second condition (level or passive)
+  // is met, whichever comes last.
+  function checkEvolutions() {
+    equipped.forEach(function (w) {
+      if (w.evolved) return;
+      const evo = EVOLUTIONS[w.id];
+      if (!evo) return;
+      const player = Game.Player.get();
+      if (w.level >= evo.requiredLevel && player && player.passives[evo.passiveId] > 0) {
+        w.evolved = true;
+        pendingEvolutions.push(w.id);
+      }
+    });
+  }
+
+  function drainEvolutionNotices() {
+    const notices = pendingEvolutions;
+    pendingEvolutions = [];
+    return notices;
+  }
+
   function initRuntimeFor(id) {
     if (id === 'riftTurret') {
       runtime.riftTurret = { turrets: [], redeployTimer: 0 };
@@ -167,16 +223,20 @@ Game.Weapons = (function () {
   }
 
   function startRun(bladeAcolyteBonusLevels) {
-    equipped = [{ id: 'bladeAcolyte', level: 1 + (bladeAcolyteBonusLevels || 0) }];
+    equipped = [{ id: 'bladeAcolyte', level: 1 + (bladeAcolyteBonusLevels || 0), evolved: false }];
     runtime = {};
     projectiles = [];
     pulses = [];
+    pendingEvolutions = [];
     initRuntimeFor('bladeAcolyte');
   }
 
-  function spawnProjectile(x, y, dirX, dirY, speed, damage, pierce, lifetime) {
+  function spawnProjectile(x, y, dirX, dirY, speed, damage, pierce, lifetime, healOnKill) {
     if (projectiles.length >= MAX_PROJECTILES) projectiles.shift();
-    projectiles.push({ x: x, y: y, dirX: dirX, dirY: dirY, speed: speed, damage: damage, pierce: pierce, age: 0, lifetime: lifetime });
+    projectiles.push({
+      x: x, y: y, dirX: dirX, dirY: dirY, speed: speed, damage: damage, pierce: pierce,
+      age: 0, lifetime: lifetime, healOnKill: !!healOnKill
+    });
   }
 
   function updateMeleeArc(dt, now, playerPos) {
@@ -188,7 +248,8 @@ Game.Weapons = (function () {
     rt.cooldown = cooldownAt('bladeAcolyte', w.level) * Game.Player.cooldownMultiplier();
 
     const range = DEFS.bladeAcolyte.range;
-    const dmg = damageAt('bladeAcolyte', w.level) * Game.Player.damageMultiplier() * bladeCountAt(w.level);
+    const dmg = damageAt('bladeAcolyte', w.level) * Game.Player.damageMultiplier()
+      * bladeCountAt(w.level, w.evolved) * evolvedDamageMult(w);
 
     Game.Enemies.getActive().forEach(function (enemy) {
       const d = Game.Utils.distance(playerPos.x, playerPos.y, enemy.x, enemy.y);
@@ -205,9 +266,9 @@ Game.Weapons = (function () {
     if (rt.cooldown > 0) return;
     rt.cooldown = cooldownAt('shadowBlade', w.level) * Game.Player.cooldownMultiplier();
 
-    const count = shadowBladeCountAt(w.level);
-    const dmg = damageAt('shadowBlade', w.level) * Game.Player.damageMultiplier();
-    const pierce = pierceAt(w.level);
+    const count = shadowBladeCountAt(w.level) + (w.evolved ? 1 : 0);
+    const dmg = damageAt('shadowBlade', w.level) * Game.Player.damageMultiplier() * evolvedDamageMult(w);
+    const pierce = w.evolved ? 99 : pierceAt(w.level);
     const def = DEFS.shadowBlade;
 
     for (let i = 0; i < count; i++) {
@@ -223,7 +284,7 @@ Game.Weapons = (function () {
     if (!w) return;
     const rt = runtime.riftTurret;
     const def = DEFS.riftTurret;
-    const desiredCount = turretCountAt(w.level);
+    const desiredCount = turretCountAt(w.level) + (w.evolved ? 1 : 0);
 
     rt.redeployTimer -= dt;
     if (rt.turrets.length === 0 || rt.redeployTimer <= 0) {
@@ -234,7 +295,7 @@ Game.Weapons = (function () {
       rt.redeployTimer = def.redeployInterval;
     }
 
-    const dmg = damageAt('riftTurret', w.level) * Game.Player.damageMultiplier();
+    const dmg = damageAt('riftTurret', w.level) * Game.Player.damageMultiplier() * evolvedDamageMult(w);
     const range = turretRangeAt(w.level);
     const fireInterval = 1 / def.fireRate;
 
@@ -245,7 +306,7 @@ Game.Weapons = (function () {
       if (!target) return;
       turret.fireCooldown = fireInterval * Game.Player.cooldownMultiplier();
       const dir = Game.Utils.normalizeTo(turret.x, turret.y, target.x, target.y);
-      spawnProjectile(turret.x, turret.y, dir.x, dir.y, def.projectileSpeed, dmg, 0, def.maxLifetimeSec);
+      spawnProjectile(turret.x, turret.y, dir.x, dir.y, def.projectileSpeed, dmg, 0, def.maxLifetimeSec, w.evolved);
     });
   }
 
@@ -254,10 +315,11 @@ Game.Weapons = (function () {
     if (!w) return;
     const rt = runtime.bloodHoundPack;
     const def = DEFS.bloodHoundPack;
-    const count = houndCountAt(w.level);
-    const dmg = damageAt('bloodHoundPack', w.level) * Game.Player.damageMultiplier();
+    const count = houndCountAt(w.level) + (w.evolved ? 1 : 0);
+    const speedDeg = def.orbitSpeedDeg * (w.evolved ? 2 : 1);
+    const dmg = damageAt('bloodHoundPack', w.level) * Game.Player.damageMultiplier() * evolvedDamageMult(w);
 
-    rt.angle = (rt.angle + def.orbitSpeedDeg * dt) % 360;
+    rt.angle = (rt.angle + speedDeg * dt) % 360;
     while (rt.hitCooldowns.length < count) rt.hitCooldowns.push(0);
 
     for (let i = 0; i < count; i++) {
@@ -272,6 +334,11 @@ Game.Weapons = (function () {
       if (hit) {
         Game.Enemies.applyDamage(hit, dmg);
         rt.hitCooldowns[i] = def.hitCooldown;
+        if (w.evolved) {
+          const push = Game.Utils.normalizeTo(playerPos.x, playerPos.y, hit.x, hit.y);
+          hit.x += push.x * KNOCKBACK_FORCE;
+          hit.y += push.y * KNOCKBACK_FORCE;
+        }
       }
     }
   }
@@ -285,8 +352,8 @@ Game.Weapons = (function () {
     if (rt.telegraphRemaining !== undefined) {
       rt.telegraphRemaining -= dt;
       if (rt.telegraphRemaining <= 0) {
-        const dmg = damageAt('cursedCathedral', w.level) * Game.Player.damageMultiplier();
-        const radius = cathedralRadiusAt(w.level);
+        const dmg = damageAt('cursedCathedral', w.level) * Game.Player.damageMultiplier() * evolvedDamageMult(w);
+        const radius = cathedralRadiusAt(w.level) * (w.evolved ? 1.5 : 1);
         Game.Enemies.getActive().forEach(function (enemy) {
           if (Game.Utils.distance(rt.originX, rt.originY, enemy.x, enemy.y) <= radius + enemy.radius) {
             Game.Enemies.applyDamage(enemy, dmg);
@@ -294,7 +361,7 @@ Game.Weapons = (function () {
         });
         pulses.push({ x: rt.originX, y: rt.originY, radius: radius, age: 0, duration: def.pulseVisualSec });
         delete rt.telegraphRemaining;
-        rt.cooldown = cooldownAt('cursedCathedral', w.level) * Game.Player.cooldownMultiplier();
+        rt.cooldown = cooldownAt('cursedCathedral', w.level) * Game.Player.cooldownMultiplier() * (w.evolved ? 0.5 : 1);
       }
       return;
     }
@@ -317,7 +384,8 @@ Game.Weapons = (function () {
         return Game.Utils.distance(p.x, p.y, enemy.x, enemy.y) <= enemy.radius + 6;
       });
       if (hit) {
-        Game.Enemies.applyDamage(hit, p.damage);
+        const killed = Game.Enemies.applyDamage(hit, p.damage);
+        if (killed && p.healOnKill) Game.Player.heal(TURRET_KILL_HEAL);
         if (p.pierce <= 0) return false;
         p.pierce -= 1;
       }
@@ -331,6 +399,7 @@ Game.Weapons = (function () {
   }
 
   function update(dt, now, playerPos) {
+    checkEvolutions();
     if (hasEquipped('bladeAcolyte')) updateMeleeArc(dt, now, playerPos);
     if (hasEquipped('shadowBlade')) updateHomingProjectileWeapon(dt, now, playerPos);
     if (hasEquipped('riftTurret')) updateTurret(dt, now, playerPos);
@@ -352,7 +421,7 @@ Game.Weapons = (function () {
     if (!w) return [];
     const rt = runtime.bloodHoundPack;
     const def = DEFS.bloodHoundPack;
-    const count = houndCountAt(w.level);
+    const count = houndCountAt(w.level) + (w.evolved ? 1 : 0);
     const positions = [];
     for (let i = 0; i < count; i++) {
       const angleRad = ((rt.angle + (360 / count) * i) * Math.PI) / 180;
@@ -381,6 +450,10 @@ Game.Weapons = (function () {
     turretCountAt: turretCountAt,
     houndCountAt: houndCountAt,
     cathedralRadiusAt: cathedralRadiusAt,
+    evolutionFor: evolutionFor,
+    displayName: displayName,
+    displayIcon: displayIcon,
+    drainEvolutionNotices: drainEvolutionNotices,
     get: get,
     hasEquipped: hasEquipped,
     getEquipped: getEquipped,

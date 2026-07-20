@@ -11,12 +11,14 @@ Game.Pickups = (function () {
   let shards = [];
   let hearts = [];
   let powerOrbs = [];
+  let chests = [];
 
   function startRun() {
     gems = [];
     shards = [];
     hearts = [];
     powerOrbs = [];
+    chests = [];
   }
 
   function pushCapped(list, entry) {
@@ -47,6 +49,13 @@ Game.Pickups = (function () {
 
   function spawnPowerOrb(x, y) {
     pushCapped(powerOrbs, { x: x, y: y });
+  }
+
+  // A small chance from any regular kill - the reward itself is rolled at
+  // collection time in arena.js, not at drop time, so what's on the ground
+  // is always just "a chest" (mystery), same as Survivor.io's boss chests.
+  function spawnChest(x, y) {
+    pushCapped(chests, { x: x, y: y });
   }
 
   function updateList(list, dt, playerPos, pickupRadius) {
@@ -81,13 +90,17 @@ Game.Pickups = (function () {
     const powerResult = updateList(powerOrbs, dt, playerPos, pickupRadius);
     powerOrbs = powerResult.remaining;
 
+    const chestResult = updateList(chests, dt, playerPos, pickupRadius);
+    chests = chestResult.remaining;
+
     return {
       xpGained: gemResult.collectedValue,
       gemsCollected: gemResult.collectedCount,
       essenceGained: shardResult.collectedCount * SHARD_ESSENCE_VALUE,
       shardsCollected: shardResult.collectedCount,
       heartsCollected: heartResult.collectedCount,
-      powerOrbsCollected: powerResult.collectedCount
+      powerOrbsCollected: powerResult.collectedCount,
+      chestsCollected: chestResult.collectedCount
     };
   }
 
@@ -107,6 +120,10 @@ Game.Pickups = (function () {
     return powerOrbs;
   }
 
+  function getChests() {
+    return chests;
+  }
+
   return {
     SHARD_ESSENCE_VALUE: SHARD_ESSENCE_VALUE,
     HEART_HEAL_AMOUNT: HEART_HEAL_AMOUNT,
@@ -115,10 +132,12 @@ Game.Pickups = (function () {
     spawnShard: spawnShard,
     spawnHeart: spawnHeart,
     spawnPowerOrb: spawnPowerOrb,
+    spawnChest: spawnChest,
     update: update,
     getGems: getGems,
     getShards: getShards,
     getHearts: getHearts,
-    getPowerOrbs: getPowerOrbs
+    getPowerOrbs: getPowerOrbs,
+    getChests: getChests
   };
 })();

@@ -9,6 +9,7 @@ Game.Enemies = (function () {
   const BOSS_DASH_DURATION = 0.4;
   const BOSS_DASH_MULT = 3;
   const WARLORD_TELEGRAPH_SEC = 2;
+  const CHEST_DROP_CHANCE = 0.05;
 
   // Generic ranks/unit-types only - deliberately no specific named historical
   // figure is used as a repeatable enemy/boss, out of respect for the real
@@ -35,14 +36,19 @@ Game.Enemies = (function () {
   let spawnTimer = 0;
   let eliteSpawnQueue = [];
   let onKill = null;
-  let onWarlordApproach = null;
+  let onPhaseAnnounce = null;
+  let skirmisherAnnounced = false;
+  let infantryAnnounced = false;
 
   function setOnKill(callback) {
     onKill = callback;
   }
 
-  function setOnWarlordApproach(callback) {
-    onWarlordApproach = callback;
+  // Fires a short banner for every difficulty phase change - new grunt
+  // ranks unlocking, an elite/boss about to arrive - so a spike in
+  // difficulty always has a visible reason instead of feeling arbitrary.
+  function setOnPhaseAnnounce(callback) {
+    onPhaseAnnounce = callback;
   }
 
   function waveMultiplier(t) {
@@ -76,13 +82,15 @@ Game.Enemies = (function () {
     active = [];
     nextInstanceId = 1;
     spawnTimer = 0;
+    skirmisherAnnounced = false;
+    infantryAnnounced = false;
     eliteSpawnQueue = [
-      { time: 30, id: 'voidReaper', telegraphed: false },
-      { time: 75, id: 'voidReaper', telegraphed: false },
-      { time: 120, id: 'voidReaper', telegraphed: false },
-      { time: 165, id: 'voidReaper', telegraphed: false },
-      { time: 90, id: 'abyssalWarlord', telegraphed: false },
-      { time: 170, id: 'abyssalWarlord', telegraphed: false }
+      { time: 30, id: 'voidReaper', telegraphed: false, message: 'A Mughal Sardar approaches!' },
+      { time: 75, id: 'voidReaper', telegraphed: false, message: 'A Mughal Sardar approaches!' },
+      { time: 120, id: 'voidReaper', telegraphed: false, message: 'A Mughal Sardar approaches!' },
+      { time: 165, id: 'voidReaper', telegraphed: false, message: 'A Mughal Sardar approaches!' },
+      { time: 90, id: 'abyssalWarlord', telegraphed: false, message: 'The Siege Commander approaches!' },
+      { time: 170, id: 'abyssalWarlord', telegraphed: false, message: 'The Siege Commander approaches!' }
     ];
   }
 
@@ -122,10 +130,19 @@ Game.Enemies = (function () {
       spawnAt(pickGruntId(t), p.x, p.y, t);
     }
 
+    if (!skirmisherAnnounced && t >= 20) {
+      skirmisherAnnounced = true;
+      if (onPhaseAnnounce) onPhaseAnnounce('Adilshahi Skirmishers have entered the field!');
+    }
+    if (!infantryAnnounced && t >= 50) {
+      infantryAnnounced = true;
+      if (onPhaseAnnounce) onPhaseAnnounce('Mughal Infantry have entered the field!');
+    }
+
     eliteSpawnQueue.forEach(function (entry) {
-      if (!entry.telegraphed && entry.id === 'abyssalWarlord' && t >= entry.time - WARLORD_TELEGRAPH_SEC) {
+      if (!entry.telegraphed && t >= entry.time - WARLORD_TELEGRAPH_SEC) {
         entry.telegraphed = true;
-        if (onWarlordApproach) onWarlordApproach();
+        if (onPhaseAnnounce) onPhaseAnnounce(entry.message);
       }
     });
 
@@ -164,9 +181,15 @@ Game.Enemies = (function () {
     });
   }
 
+  // Returns true if this hit killed the enemy - used by evolved weapons
+  // (e.g. Fortress of Raigad healing the player on a turret kill).
   function applyDamage(enemy, amount) {
     enemy.hp -= amount;
-    if (enemy.hp <= 0) kill(enemy);
+    if (enemy.hp <= 0) {
+      kill(enemy);
+      return true;
+    }
+    return false;
   }
 
   function kill(enemy) {
@@ -199,6 +222,9 @@ Game.Enemies = (function () {
     } else {
       const chance = def.essenceDropChance + Game.Player.essenceDropBonus();
       if (Math.random() < chance) Game.Pickups.spawnShard(enemy.x, enemy.y);
+      // A small mystery-chest chance from any regular kill - the reward
+      // (health/coins/new skill) is rolled on pickup, not here.
+      if (Math.random() < CHEST_DROP_CHANCE) Game.Pickups.spawnChest(enemy.x, enemy.y);
     }
 
     if (onKill) onKill(enemy);
@@ -224,7 +250,7 @@ Game.Enemies = (function () {
   return {
     DEFS: DEFS,
     setOnKill: setOnKill,
-    setOnWarlordApproach: setOnWarlordApproach,
+    setOnPhaseAnnounce: setOnPhaseAnnounce,
     waveMultiplier: waveMultiplier,
     damageMultiplier: damageMultiplier,
     startRun: startRun,
