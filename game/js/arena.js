@@ -388,7 +388,7 @@ Game.Arena = (function () {
     drawPickups(player.x, player.y, w, h);
     drawWeaponEffects(player.x, player.y);
     drawEnemies(player.x, player.y);
-    drawPlayer(w, h);
+    drawPlayer(w, h, facing);
 
     ctx.restore();
   }
@@ -405,14 +405,35 @@ Game.Arena = (function () {
     ctx.stroke();
   }
 
-  function drawPlayer(w, h) {
-    ctx.fillStyle = '#e8e6e3';
-    ctx.strokeStyle = '#ff2b4d';
-    ctx.lineWidth = 2;
+  function drawPlayer(w, h, facing) {
+    const character = Game.Player.getSelectedCharacter();
+    const angle = Math.atan2(facing.y, facing.x);
+    const cx = w / 2;
+    const cy = h / 2;
+
+    // Cloak: a soft shape trailing behind the facing direction, gives the flat
+    // circle a silhouette instead of reading as a plain dot.
+    ctx.fillStyle = character.cloakColor;
     ctx.beginPath();
-    ctx.arc(w / 2, h / 2, 16, 0, Math.PI * 2);
+    ctx.ellipse(cx - Math.cos(angle) * 7, cy - Math.sin(angle) * 7, 21, 21, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Body
+    ctx.fillStyle = character.bodyColor;
+    ctx.strokeStyle = character.accentColor;
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.arc(cx, cy, 16, 0, Math.PI * 2);
     ctx.fill();
     ctx.stroke();
+
+    // Blade held toward whatever the hunter is currently facing/attacking.
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(angle);
+    ctx.fillStyle = character.accentColor;
+    ctx.fillRect(9, -2, 17, 4);
+    ctx.restore();
   }
 
   function drawEnemies(cx, cy) {

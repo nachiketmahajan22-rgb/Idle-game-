@@ -26,6 +26,7 @@ Game.UICamp = (function () {
       beginHuntBtn: document.getElementById('begin-hunt-btn'),
       headStartBtn: document.getElementById('head-start-btn'),
       headStartStatus: document.getElementById('head-start-status'),
+      characterSelect: document.getElementById('character-select'),
 
       tabNav: document.getElementById('camp-tab-nav'),
       tabPanels: document.querySelectorAll('#screen-camp .tab-panel'),
@@ -51,6 +52,23 @@ Game.UICamp = (function () {
 
       achievementToast: document.getElementById('achievement-toast')
     };
+  }
+
+  function buildCharacterSelect() {
+    els.characterSelect.innerHTML = Game.Player.CHARACTERS.map(function (c) {
+      return '' +
+        '<button class="character-btn" data-character="' + c.id + '" style="--char-color:' + c.accentColor + '">' +
+          '<span class="character-icon">' + c.icon + '</span>' +
+          '<span class="character-name">' + c.name + '</span>' +
+        '</button>';
+    }).join('');
+  }
+
+  function updateCharacterSelect() {
+    const selected = Game.State.data.selectedCharacter;
+    Array.prototype.forEach.call(els.characterSelect.querySelectorAll('.character-btn'), function (btn) {
+      btn.classList.toggle('selected', btn.getAttribute('data-character') === selected);
+    });
   }
 
   function buildGearList() {
@@ -151,6 +169,7 @@ Game.UICamp = (function () {
   function refresh() {
     els.essenceCount.textContent = fmt(Game.State.data.essence);
     els.shardsChip.textContent = fmt(Game.State.data.bladeShards);
+    updateCharacterSelect();
     updateGearList();
     updateStats();
     updateAchievements();
@@ -169,6 +188,14 @@ Game.UICamp = (function () {
   }
 
   function bindEvents() {
+    els.characterSelect.addEventListener('click', function (e) {
+      const btn = e.target.closest('[data-character]');
+      if (!btn) return;
+      Game.Player.selectCharacter(btn.getAttribute('data-character'));
+      Game.Save.save();
+      updateCharacterSelect();
+    });
+
     els.tabNav.addEventListener('click', function (e) {
       const btn = e.target.closest('.tab-btn');
       if (!btn) return;
@@ -240,6 +267,7 @@ Game.UICamp = (function () {
 
   function init() {
     cacheEls();
+    buildCharacterSelect();
     buildGearList();
     buildStats();
     buildAchievements();

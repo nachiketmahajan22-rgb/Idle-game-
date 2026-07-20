@@ -13,6 +13,7 @@ Game.State = (function () {
       version: SAVE_VERSION,
       essence: 0,
       lifetimeEssence: 0,
+      selectedCharacter: 'bladeHunter',
       gear: gear,
       achievements: [],
       bladeShards: 0,

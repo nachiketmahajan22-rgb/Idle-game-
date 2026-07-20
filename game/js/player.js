@@ -18,6 +18,16 @@ Game.Player = (function () {
     essenceSense: { name: 'Essence Sense', icon: '🔶', desc: '+15% essence shard drop chance' }
   };
 
+  // Cosmetic only - no stat differences between characters, purely which colors/icon
+  // draw the on-screen hunter in the arena. Canvas-drawn (cloak + body + blade), no
+  // image assets, consistent with the rest of the game's zero-binary-asset approach.
+  const CHARACTERS = [
+    { id: 'bladeHunter', name: 'Blade Hunter', icon: '⚔', bodyColor: '#e8e6e3', cloakColor: '#3a1015', accentColor: '#ff2b4d' },
+    { id: 'shadowRogue',  name: 'Shadow Rogue', icon: '🗡', bodyColor: '#2a2a35', cloakColor: '#12121a', accentColor: '#6a3df5' },
+    { id: 'ironWarden',   name: 'Iron Warden',  icon: '🛡', bodyColor: '#cfcdd6', cloakColor: '#191922', accentColor: '#8a8790' },
+    { id: 'emberWitch',   name: 'Ember Witch',  icon: '🔥', bodyColor: '#1a0f0f', cloakColor: '#3a1a05', accentColor: '#ffd23f' }
+  ];
+
   let run = null;
 
   function createRunPlayer() {
@@ -101,6 +111,20 @@ Game.Player = (function () {
     run.invulnUntil = Math.max(run.invulnUntil, now + seconds);
   }
 
+  function getCharacter(id) {
+    return CHARACTERS.find(function (c) { return c.id === id; }) || CHARACTERS[0];
+  }
+
+  function getSelectedCharacter() {
+    return getCharacter(Game.State.data.selectedCharacter);
+  }
+
+  function selectCharacter(id) {
+    if (!getCharacter(id)) return false;
+    Game.State.data.selectedCharacter = id;
+    return true;
+  }
+
   return {
     BASE_HP: BASE_HP,
     BASE_MOVE_SPEED: BASE_MOVE_SPEED,
@@ -108,6 +132,10 @@ Game.Player = (function () {
     MAX_PASSIVE_STACKS: MAX_PASSIVE_STACKS,
     PASSIVE_IDS: PASSIVE_IDS,
     PASSIVE_INFO: PASSIVE_INFO,
+    CHARACTERS: CHARACTERS,
+    getCharacter: getCharacter,
+    getSelectedCharacter: getSelectedCharacter,
+    selectCharacter: selectCharacter,
     createRunPlayer: createRunPlayer,
     init: init,
     get: get,
@@ -123,4 +151,5 @@ Game.Player = (function () {
     heal: heal,
     grantInvulnerability: grantInvulnerability
   };
+
 })();
