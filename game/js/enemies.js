@@ -21,10 +21,13 @@ Game.Enemies = (function () {
     abyssalWarlord: { name: 'Siege Commander',     hp: 1400, speed: 60,  contactDamage: 30, xpValue: 80, radius: 40, isBoss: true }
   };
 
+  // Gated by unlockAt so a fresh campaign opens with Scouts only, then
+  // gradually introduces the tougher grunt ranks - a new player's first
+  // 20 seconds shouldn't already have Skirmishers and Infantry mixed in.
   const GRUNT_WEIGHTS = [
-    { id: 'riftWhelp', weight: 0.60 },
-    { id: 'ravenousCur', weight: 0.25 },
-    { id: 'boneStalker', weight: 0.15 }
+    { id: 'riftWhelp', weight: 0.60, unlockAt: 0 },
+    { id: 'ravenousCur', weight: 0.25, unlockAt: 20 },
+    { id: 'boneStalker', weight: 0.15, unlockAt: 50 }
   ];
 
   let active = [];
@@ -51,17 +54,22 @@ Game.Enemies = (function () {
   }
 
   function spawnInterval(t) {
-    return Math.max(0.4, 1.4 - (t / 180) * 1.0);
+    // Eased in more gently than a flat 1.4s start - the opening seconds of a
+    // campaign shouldn't already feel like a swarm before the player has
+    // found their footing.
+    return Math.max(0.4, 1.8 - (t / 180) * 1.4);
   }
 
-  function pickGruntId() {
-    const r = Math.random();
+  function pickGruntId(t) {
+    const pool = GRUNT_WEIGHTS.filter(function (g) { return t >= g.unlockAt; });
+    const totalWeight = pool.reduce(function (sum, g) { return sum + g.weight; }, 0);
+    const r = Math.random() * totalWeight;
     let cumulative = 0;
-    for (let i = 0; i < GRUNT_WEIGHTS.length; i++) {
-      cumulative += GRUNT_WEIGHTS[i].weight;
-      if (r <= cumulative) return GRUNT_WEIGHTS[i].id;
+    for (let i = 0; i < pool.length; i++) {
+      cumulative += pool[i].weight;
+      if (r <= cumulative) return pool[i].id;
     }
-    return GRUNT_WEIGHTS[GRUNT_WEIGHTS.length - 1].id;
+    return pool[pool.length - 1].id;
   }
 
   function startRun() {
@@ -111,7 +119,7 @@ Game.Enemies = (function () {
     if (spawnTimer <= 0 && active.length < MAX_ACTIVE) {
       spawnTimer = spawnInterval(t);
       const p = spawnPointAround(playerPos);
-      spawnAt(pickGruntId(), p.x, p.y, t);
+      spawnAt(pickGruntId(t), p.x, p.y, t);
     }
 
     eliteSpawnQueue.forEach(function (entry) {

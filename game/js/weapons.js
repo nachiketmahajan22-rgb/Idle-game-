@@ -6,10 +6,15 @@ Game.Weapons = (function () {
 
   const DEFS = {
     bladeAcolyte: {
+      // Full-circle arc: the held blade spins continuously around the
+      // hunter (see arena.js drawPlayer), so the hit area matches what's
+      // actually shown on screen - it also means kiting away from a fast
+      // pursuer (e.g. the Adilshahi Skirmisher) no longer makes every swing
+      // whiff just because the movement-facing points the other way.
       name: 'Talwar Strike', kind: 'meleeArc', icon: '⚔',
       baseDamage: 12, damageGrowth: 1.15,
       baseCooldown: 0.90, cooldownMult: 0.96, minCooldown: 0.5,
-      range: 90, baseArc: 100, arcBonusLevels: [5, 8], arcBonusDeg: 15
+      range: 90, baseArc: 360, arcBonusLevels: [5, 8], arcBonusDeg: 15
     },
     shadowBlade: {
       name: 'Wagh Nakh Throw', kind: 'homingProjectile', icon: '🐾',
