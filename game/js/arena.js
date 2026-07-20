@@ -61,6 +61,11 @@ Game.Arena = (function () {
   }
 
   function startHunt(headStartApplied) {
+    // #screen-hunt is display:none until this run starts, so the canvas's
+    // parent had zero size at boot-time init() - resize now that it's about
+    // to become visible, or the canvas stays 0x0 and nothing ever renders.
+    resize();
+
     const bonusLevels = Game.Camp.getBladeAcolyteStartBonus() +
       (headStartApplied ? Game.Ads.BOOSTS.headStart.weaponLevelBonus : 0);
 
