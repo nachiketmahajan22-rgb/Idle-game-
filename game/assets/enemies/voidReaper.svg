@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300">
+  <defs>
+    <radialGradient id="bodyGrad" cx="30%" cy="15%" r="90%">
+      <stop offset="0%" stop-color="#c23a2a"/>
+      <stop offset="100%" stop-color="#7a1414"/>
+    </radialGradient>
+    <radialGradient id="turbanGrad" cx="30%" cy="15%" r="90%">
+      <stop offset="0%" stop-color="#e0432c"/>
+      <stop offset="100%" stop-color="#8a1a1a"/>
+    </radialGradient>
+    <radialGradient id="skinGrad" cx="35%" cy="25%" r="85%">
+      <stop offset="0%" stop-color="#d6a06a"/>
+      <stop offset="100%" stop-color="#a86f42"/>
+    </radialGradient>
+    <radialGradient id="horseGrad" cx="35%" cy="20%" r="90%">
+      <stop offset="0%" stop-color="#7a5638"/>
+      <stop offset="100%" stop-color="#3e2a1a"/>
+    </radialGradient>
+    <linearGradient id="bladeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fff8ea"/>
+      <stop offset="55%" stop-color="#e4d9b8"/>
+      <stop offset="100%" stop-color="#9c8b5e"/>
+    </linearGradient>
+  </defs>
+
+  <!-- far-side legs (depth), long and thin -->
+  <path d="M112,222 L104,286 L114,286 L124,222 Z" fill="#2c1c10"/>
+  <path d="M196,222 L206,288 L216,288 L204,222 Z" fill="#2c1c10"/>
+
+  <!-- tail -->
+  <path d="M78,196 C54,208 40,232 44,262 C56,246 70,228 88,210 Z" fill="url(#horseGrad)" stroke="#241408" stroke-width="2"/>
+
+  <!-- horse body, slimmer barrel -->
+  <ellipse cx="150" cy="204" rx="68" ry="26" fill="url(#horseGrad)" stroke="#241408" stroke-width="2.5"/>
+
+  <!-- near-side legs, long and thin -->
+  <path d="M100,218 L92,284 L104,284 L112,218 Z" fill="url(#horseGrad)" stroke="#241408" stroke-width="2"/>
+  <path d="M184,218 L194,286 L206,286 L196,218 Z" fill="url(#horseGrad)" stroke="#241408" stroke-width="2"/>
+  <ellipse cx="98" cy="286" rx="9" ry="4.5" fill="#140c06"/>
+  <ellipse cx="200" cy="288" rx="9" ry="4.5" fill="#140c06"/>
+
+  <!-- long graceful neck rising from the body -->
+  <path d="M196,198 C214,176 226,150 230,120 C231,112 241,111 242,120 C240,148 230,174 212,198 Z"
+        fill="url(#horseGrad)" stroke="#241408" stroke-width="2.5"/>
+  <!-- mane along the neck's top edge -->
+  <path d="M228,122 C224,144 216,166 204,188" fill="none" stroke="#1a0f08" stroke-width="5" stroke-linecap="round" opacity="0.7"/>
+
+  <!-- distinct head: rounded crown, two pointed ears, and a forward muzzle wedge -->
+  <ellipse cx="248" cy="106" rx="17" ry="14" fill="url(#horseGrad)" stroke="#241408" stroke-width="2.5"/>
+  <path d="M256,120 C268,124 278,132 282,142 C283,146 279,149 275,146 C267,138 259,131 251,126 Z"
+        fill="url(#horseGrad)" stroke="#241408" stroke-width="2.5"/>
+  <path d="M238,94 L232,78 L244,90 Z" fill="url(#horseGrad)" stroke="#241408" stroke-width="1.5"/>
+  <path d="M254,92 L252,76 L262,90 Z" fill="url(#horseGrad)" stroke="#241408" stroke-width="1.5"/>
+  <ellipse cx="256" cy="102" rx="2.6" ry="3.2" fill="#0e0a06"/>
+
+  <!-- saddle blanket -->
+  <path d="M104,186 C118,174 182,174 196,186 C196,196 104,196 104,186 Z" fill="url(#bodyGrad)" stroke="#4a1010" stroke-width="2"/>
+
+  <!-- rider stirrup feet peeking below the saddle -->
+  <ellipse cx="132" cy="210" rx="10" ry="6" fill="#4a1010"/>
+  <ellipse cx="172" cy="210" rx="10" ry="6" fill="#4a1010"/>
+
+  <!-- rider torso -->
+  <path d="M150,128 L176,146 L169,194 L150,204 L131,194 L124,146 Z" fill="url(#bodyGrad)" stroke="#4a1010" stroke-width="2.5"/>
+  <rect x="128" y="176" width="44" height="10" rx="3" fill="#4a1010"/>
+  <circle cx="150" cy="181" r="5" fill="#ffd23f" opacity="0.9"/>
+
+  <!-- reins hand -->
+  <path d="M196,138 C210,146 218,158 218,170 C216,176 210,178 205,174 C202,166 199,154 192,144 Z"
+        fill="url(#bodyGrad)" stroke="#4a1010" stroke-width="2.5"/>
+  <path d="M206,168 C216,158 226,148 234,136" fill="none" stroke="#241408" stroke-width="2" stroke-linecap="round"/>
+
+  <!-- raised sword arm -->
+  <path d="M106,128 C86,136 68,146 56,156 C49,162 48,172 55,179 C63,184 72,180 78,173 C88,162 100,148 114,136 Z"
+        fill="url(#bodyGrad)" stroke="#4a1010" stroke-width="2.5"/>
+  <g transform="translate(56,174) rotate(-46)">
+    <rect x="-7" y="-6" width="14" height="18" rx="3" fill="#5c3a1a" stroke="#2a1a08" stroke-width="1.5"/>
+    <rect x="-15" y="9" width="30" height="7" rx="2" fill="#ffd23f" stroke="#6a4c10" stroke-width="1.5"/>
+    <path d="M-5,15 L5,15 L3,96 L0,106 L-3,96 Z" fill="url(#bladeGrad)" stroke="#3a3220" stroke-width="1.5"/>
+  </g>
+
+  <rect x="139" y="104" width="22" height="18" rx="6" fill="url(#skinGrad)"/>
+
+  <!-- ornate peaked turban with a plume, marking the elite officer rank -->
+  <path d="M150,22 C184,24 197,52 191,80 C187,94 113,94 109,80 C103,52 116,24 150,22 Z"
+        fill="url(#turbanGrad)" stroke="#5a0e0e" stroke-width="2"/>
+  <path d="M118,46 C134,39 166,39 182,46" fill="none" stroke="#5a0e0e" stroke-width="2" opacity="0.6"/>
+  <path d="M114,62 C132,56 168,56 186,62" fill="none" stroke="#5a0e0e" stroke-width="2" opacity="0.6"/>
+  <path d="M172,28 L192,8" stroke="#ffd23f" stroke-width="4" stroke-linecap="round"/>
+
+  <!-- face -->
+  <ellipse cx="150" cy="90" rx="27" ry="25" fill="url(#skinGrad)" stroke="#6a4626" stroke-width="1.5"/>
+  <path d="M129,83 C134,78 143,76 150,78" fill="none" stroke="#2a1a0c" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M171,83 C166,78 157,76 150,78" fill="none" stroke="#2a1a0c" stroke-width="2.5" stroke-linecap="round"/>
+  <ellipse cx="140" cy="88" rx="3" ry="4" fill="#1a0f08"/>
+  <ellipse cx="160" cy="88" rx="3" ry="4" fill="#1a0f08"/>
+  <path d="M130,106 C137,113 144,115 150,115 C156,115 163,113 170,106 C165,102 159,107 150,107 C141,107 135,102 130,106 Z" fill="#1a1208"/>
+</svg>

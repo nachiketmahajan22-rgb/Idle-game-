@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300">
+  <defs>
+    <radialGradient id="bodyGrad" cx="30%" cy="15%" r="90%">
+      <stop offset="0%" stop-color="#cabb92"/>
+      <stop offset="100%" stop-color="#a1926a"/>
+    </radialGradient>
+    <radialGradient id="turbanGrad" cx="30%" cy="15%" r="90%">
+      <stop offset="0%" stop-color="#a4915c"/>
+      <stop offset="100%" stop-color="#6b5a34"/>
+    </radialGradient>
+    <radialGradient id="skinGrad" cx="35%" cy="25%" r="85%">
+      <stop offset="0%" stop-color="#d6a06a"/>
+      <stop offset="100%" stop-color="#a86f42"/>
+    </radialGradient>
+    <linearGradient id="bladeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fff8ea"/>
+      <stop offset="55%" stop-color="#e4d9b8"/>
+      <stop offset="100%" stop-color="#9c8b5e"/>
+    </linearGradient>
+  </defs>
+
+  <!-- forward sword arm, guard stance (not raised - a rank-and-file scout, not a hero) -->
+  <path d="M112,158 C88,168 66,182 52,196 C45,203 45,214 52,220 C60,226 70,221 76,213 C88,199 100,182 118,166 Z"
+        fill="url(#bodyGrad)" stroke="#4a3e20" stroke-width="2.5"/>
+  <g transform="translate(50,216) rotate(-38)">
+    <rect x="-6" y="-5" width="12" height="16" rx="3" fill="#4a3a1c" stroke="#241c0c" stroke-width="1.5"/>
+    <rect x="-13" y="8" width="26" height="6" rx="2" fill="#8a7444" stroke="#4a3a1c" stroke-width="1.5"/>
+    <path d="M-4,14 L4,14 L2,84 L0,94 L-2,84 Z" fill="url(#bladeGrad)" stroke="#3a3220" stroke-width="1.5"/>
+  </g>
+
+  <!-- off arm, relaxed at side -->
+  <path d="M188,158 C204,172 214,190 214,208 C212,216 204,220 197,215 C193,206 192,192 190,178 C189,170 188,163 188,158 Z"
+        fill="url(#bodyGrad)" stroke="#4a3e20" stroke-width="2.5"/>
+
+  <!-- legs -->
+  <path d="M130,208 C124,230 121,252 124,272 L142,272 C144,250 145,228 145,208 Z" fill="url(#bodyGrad)" stroke="#4a3e20" stroke-width="2.5"/>
+  <path d="M170,208 C176,230 179,252 176,272 L158,272 C156,250 155,228 155,208 Z" fill="url(#bodyGrad)" stroke="#4a3e20" stroke-width="2.5"/>
+  <ellipse cx="130" cy="276" rx="13" ry="6" fill="#33291a"/>
+  <ellipse cx="170" cy="276" rx="13" ry="6" fill="#33291a"/>
+
+  <!-- tunic -->
+  <path d="M150,150 L178,168 L169,212 L150,224 L131,212 L122,168 Z" fill="url(#bodyGrad)" stroke="#4a3e20" stroke-width="2.5"/>
+  <rect x="126" y="198" width="48" height="11" rx="3" fill="#4a3a1c"/>
+
+  <rect x="139" y="126" width="22" height="18" rx="6" fill="url(#skinGrad)"/>
+
+  <!-- simple peaked Mughal turban, no ornament -->
+  <path d="M150,44 C184,46 197,74 191,102 C187,116 113,116 109,102 C103,74 116,46 150,44 Z"
+        fill="url(#turbanGrad)" stroke="#3a3018" stroke-width="2"/>
+  <path d="M118,68 C134,61 166,61 182,68" fill="none" stroke="#3a3018" stroke-width="2" opacity="0.6"/>
+  <path d="M114,84 C132,78 168,78 186,84" fill="none" stroke="#3a3018" stroke-width="2" opacity="0.6"/>
+
+  <!-- face -->
+  <ellipse cx="150" cy="112" rx="27" ry="25" fill="url(#skinGrad)" stroke="#6a4626" stroke-width="1.5"/>
+  <path d="M129,105 C134,100 143,98 150,100" fill="none" stroke="#2a1a0c" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M171,105 C166,100 157,98 150,100" fill="none" stroke="#2a1a0c" stroke-width="2.5" stroke-linecap="round"/>
+  <ellipse cx="140" cy="110" rx="3" ry="4" fill="#1a0f08"/>
+  <ellipse cx="160" cy="110" rx="3" ry="4" fill="#1a0f08"/>
+  <path d="M130,128 C137,135 144,137 150,137 C156,137 163,135 170,128 C165,124 159,129 150,129 C141,129 135,124 130,128 Z" fill="#1a1208"/>
+</svg>

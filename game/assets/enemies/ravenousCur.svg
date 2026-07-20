@@ -1,0 +1,64 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300">
+  <defs>
+    <radialGradient id="bodyGrad" cx="30%" cy="15%" r="90%">
+      <stop offset="0%" stop-color="#9cb8c4"/>
+      <stop offset="100%" stop-color="#6d8f9c"/>
+    </radialGradient>
+    <radialGradient id="turbanGrad" cx="30%" cy="15%" r="90%">
+      <stop offset="0%" stop-color="#4f8aa6"/>
+      <stop offset="100%" stop-color="#274a5c"/>
+    </radialGradient>
+    <radialGradient id="skinGrad" cx="35%" cy="25%" r="85%">
+      <stop offset="0%" stop-color="#d6a06a"/>
+      <stop offset="100%" stop-color="#a86f42"/>
+    </radialGradient>
+    <linearGradient id="woodGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#c9a35a"/>
+      <stop offset="100%" stop-color="#7a5a2a"/>
+    </linearGradient>
+  </defs>
+
+  <!-- bow, held vertically at arm's length: a clean curved stave + taut string -->
+  <path d="M46,120 C20,140 20,200 46,230" fill="none" stroke="url(#woodGrad)" stroke-width="7" stroke-linecap="round"/>
+  <path d="M46,120 L46,230" stroke="#f0e8d0" stroke-width="1.8"/>
+
+  <!-- bow-hand arm gripping the stave at its middle -->
+  <path d="M112,160 C90,164 68,168 50,172 C42,174 40,182 45,188 C52,193 62,189 70,184 C86,178 102,172 118,168 Z"
+        fill="url(#bodyGrad)" stroke="#12242c" stroke-width="2.5"/>
+  <rect x="38" y="168" width="16" height="14" rx="3" fill="#12242c" opacity="0.55"/>
+
+  <!-- drawstring arm, pulled back to the ear with a nocked arrow -->
+  <path d="M188,158 C204,156 218,158 228,164 C234,168 234,177 227,180 C218,181 208,177 197,172 C192,169 189,163 188,158 Z"
+        fill="url(#bodyGrad)" stroke="#12242c" stroke-width="2.5"/>
+  <path d="M175,175 L232,168" stroke="#8a6d4a" stroke-width="3" stroke-linecap="round"/>
+  <path d="M226,164 L238,166 L226,172 Z" fill="#e8ddc4"/>
+
+  <!-- legs, wider stance for a ranged shot -->
+  <path d="M126,206 C116,230 111,254 116,274 L136,274 C140,250 143,226 144,206 Z" fill="url(#bodyGrad)" stroke="#12242c" stroke-width="2.5"/>
+  <path d="M174,206 C184,230 189,254 184,274 L164,274 C160,250 157,226 156,206 Z" fill="url(#bodyGrad)" stroke="#12242c" stroke-width="2.5"/>
+  <ellipse cx="124" cy="278" rx="13" ry="6" fill="#101c22"/>
+  <ellipse cx="176" cy="278" rx="13" ry="6" fill="#101c22"/>
+
+  <!-- tunic -->
+  <path d="M150,150 L178,168 L169,212 L150,224 L131,212 L122,168 Z" fill="url(#bodyGrad)" stroke="#12242c" stroke-width="2.5"/>
+  <rect x="126" y="198" width="48" height="11" rx="3" fill="#12242c"/>
+
+  <!-- quiver over the shoulder -->
+  <rect x="188" y="146" width="14" height="42" rx="4" fill="#274a5c" stroke="#12242c" stroke-width="2" transform="rotate(18 195 167)"/>
+  <path d="M192,142 L200,142 L198,158 L194,158 Z" fill="#e8ddc4" transform="rotate(18 195 167)"/>
+
+  <rect x="139" y="126" width="22" height="18" rx="6" fill="url(#skinGrad)"/>
+
+  <!-- rounder Deccani cap, no peak, marking a different sultanate from the Mughal ranks -->
+  <path d="M150,50 C186,52 198,80 191,104 C187,116 113,116 109,104 C102,80 114,52 150,50 Z"
+        fill="url(#turbanGrad)" stroke="#0e1c22" stroke-width="2"/>
+  <path d="M113,78 C130,72 170,72 187,78" fill="none" stroke="#0e1c22" stroke-width="2" opacity="0.6"/>
+
+  <!-- face -->
+  <ellipse cx="150" cy="112" rx="27" ry="25" fill="url(#skinGrad)" stroke="#6a4626" stroke-width="1.5"/>
+  <path d="M129,105 C134,100 143,98 150,100" fill="none" stroke="#2a1a0c" stroke-width="2.5" stroke-linecap="round"/>
+  <path d="M171,105 C166,100 157,98 150,100" fill="none" stroke="#2a1a0c" stroke-width="2.5" stroke-linecap="round"/>
+  <ellipse cx="140" cy="110" rx="3" ry="4" fill="#1a0f08"/>
+  <ellipse cx="160" cy="110" rx="3" ry="4" fill="#1a0f08"/>
+  <path d="M130,128 C137,135 144,137 150,137 C156,137 163,135 170,128 C165,124 159,129 150,129 C141,129 135,124 130,128 Z" fill="#1a1208"/>
+</svg>
