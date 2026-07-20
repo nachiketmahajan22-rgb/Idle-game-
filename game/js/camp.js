@@ -4,16 +4,16 @@ Game.Camp = (function () {
   const COST_SCALE = 1.15;
 
   const LIST = [
-    { id: 'weaponDamage',          name: 'Honed Edge',              kind: 'leveled', baseCost: 50,   cap: null, desc: '+4% damage, all weapons' },
-    { id: 'ironSinew',             name: 'Iron Sinew',              kind: 'leveled', baseCost: 40,   cap: null, desc: '+5 max HP' },
-    { id: 'swiftLegs',             name: 'Swift Legs',              kind: 'leveled', baseCost: 60,   cap: null, desc: '+2% move speed' },
-    { id: 'riftReach',             name: 'Rift Reach',              kind: 'leveled', baseCost: 45,   cap: null, desc: '+3% pickup radius' },
-    { id: 'bladeAcolyteMastery',   name: 'Blade Acolyte Mastery',   kind: 'leveled', baseCost: 200,  cap: 6,    desc: '+1 starting Blade Acolyte level per 2 purchased' },
-    { id: 'essenceTrickleShrine',  name: 'Essence Trickle Shrine',  kind: 'leveled', baseCost: 80,   cap: null, desc: '+1 Essence/hr while away' },
-    { id: 'huntersLedger',         name: "Hunter's Ledger",         kind: 'oneTime', baseCost: 500,  desc: 'Level-up offers 4 choices instead of 3' },
-    { id: 'riftTurretBlueprint',   name: 'Rift Turret Blueprint',   kind: 'oneTime', baseCost: 300,  desc: 'Unlocks Rift Turret as a level-up option' },
-    { id: 'bloodHoundKennel',      name: 'Blood Hound Kennel',      kind: 'oneTime', baseCost: 600,  desc: 'Unlocks Blood Hound Pack as a level-up option' },
-    { id: 'cursedBellChalice',     name: 'Cursed Bell Chalice',     kind: 'oneTime', baseCost: 1000, desc: 'Unlocks Cursed Cathedral as a level-up option' }
+    { id: 'weaponDamage',          name: 'Talwar Forging',       kind: 'leveled', baseCost: 50,   cap: null, desc: '+4% damage, all weapons' },
+    { id: 'ironSinew',             name: 'Kavach Training',      kind: 'leveled', baseCost: 40,   cap: null, desc: '+5 max HP' },
+    { id: 'swiftLegs',             name: 'Sahyadri Training',    kind: 'leveled', baseCost: 60,   cap: null, desc: '+2% move speed' },
+    { id: 'riftReach',             name: "Scout's Instinct",     kind: 'leveled', baseCost: 45,   cap: null, desc: '+3% pickup radius' },
+    { id: 'bladeAcolyteMastery',   name: 'Talwar Mastery',       kind: 'leveled', baseCost: 200,  cap: 6,    desc: '+1 starting Talwar Strike level per 2 purchased' },
+    { id: 'essenceTrickleShrine',  name: 'Swarajya Treasury',    kind: 'leveled', baseCost: 80,   cap: null, desc: '+1 Swarajya/hr while away' },
+    { id: 'huntersLedger',         name: 'War Council',          kind: 'oneTime', baseCost: 500,  desc: 'Level-up offers 4 choices instead of 3' },
+    { id: 'riftTurretBlueprint',   name: 'Watchtower Blueprint', kind: 'oneTime', baseCost: 300,  desc: 'Unlocks Watch Tower Archer as a level-up option' },
+    { id: 'bloodHoundKennel',      name: 'Mavla Recruitment',    kind: 'oneTime', baseCost: 600,  desc: 'Unlocks Loyal Mavlas as a level-up option' },
+    { id: 'cursedBellChalice',     name: 'War Horn Blessing',    kind: 'oneTime', baseCost: 1000, desc: 'Unlocks Rann Shinga as a level-up option' }
   ];
 
   const WEAPON_UNLOCK_GEAR_ID = {

@@ -1,44 +1,48 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300">
   <defs>
     <radialGradient id="cloakGrad" cx="30%" cy="15%" r="90%">
-      <stop offset="0%" stop-color="#6a4018"/>
-      <stop offset="100%" stop-color="#241206"/>
+      <stop offset="0%" stop-color="#d4a627"/>
+      <stop offset="100%" stop-color="#8a6a10"/>
     </radialGradient>
     <radialGradient id="bodyGrad" cx="30%" cy="15%" r="90%">
-      <stop offset="0%" stop-color="#3e2c1e"/>
-      <stop offset="100%" stop-color="#160c0c"/>
+      <stop offset="0%" stop-color="#e8ddc4"/>
+      <stop offset="100%" stop-color="#c4b790"/>
+    </radialGradient>
+    <radialGradient id="turbanGrad" cx="30%" cy="15%" r="90%">
+      <stop offset="0%" stop-color="#e0b84a"/>
+      <stop offset="100%" stop-color="#a3811a"/>
     </radialGradient>
     <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
-      <feGaussianBlur stdDeviation="10" result="blur"/>
+      <feGaussianBlur stdDeviation="9" result="blur"/>
       <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
     </filter>
   </defs>
 
-  <ellipse cx="150" cy="170" rx="105" ry="112" fill="none" stroke="#ffd23f" stroke-width="3" opacity="0.35" filter="url(#glow)"/>
+  <ellipse cx="150" cy="170" rx="105" ry="112" fill="none" stroke="#c9a227" stroke-width="3" opacity="0.32" filter="url(#glow)"/>
 
-  <path d="M114,130 C68,162 48,220 64,272
-           L80,292 L96,274 L112,294 L128,276 L150,296 L172,276 L188,294 L204,274 L220,292 L236,272
-           C252,220 232,162 186,130 C180,152 120,152 114,130 Z" fill="url(#cloakGrad)"/>
-  <path d="M104,192 C94,225 100,255 116,272" fill="none" stroke="#ffd23f" stroke-opacity="0.28" stroke-width="2"/>
-  <path d="M196,192 C206,225 200,255 184,272" fill="none" stroke="#ffd23f" stroke-opacity="0.28" stroke-width="2"/>
+  <path d="M114,130 C74,160 54,216 66,270 C90,298 210,298 234,270 C246,216 226,160 186,130
+           C180,152 120,152 114,130 Z" fill="url(#cloakGrad)"/>
+  <path d="M114,130 C94,176 92,230 102,270" fill="none" stroke="#000" stroke-opacity="0.25" stroke-width="3"/>
+  <path d="M186,130 C206,176 208,230 198,270" fill="none" stroke="#000" stroke-opacity="0.25" stroke-width="3"/>
 
-  <path d="M150,142 L174,163 L167,246 L150,260 L133,246 L126,163 Z" fill="url(#bodyGrad)" stroke="#5a4222" stroke-width="3"/>
-  <path d="M132,166 L168,242" stroke="#2a1a08" stroke-width="7" opacity="0.85"/>
-  <circle cx="150" cy="204" r="10" fill="#ffd23f" opacity="0.85"/>
-  <circle cx="150" cy="204" r="10" fill="none" stroke="#2a1a08" stroke-width="2"/>
+  <path d="M150,142 L174,163 L167,246 L150,260 L133,246 L126,163 Z" fill="url(#bodyGrad)" stroke="#5c4a28" stroke-width="2.5"/>
+  <path d="M150,150 C158,168 160,206 154,242 L150,248 L146,242 C140,206 140,168 150,150 Z" fill="#a3811a" opacity="0.7"/>
+  <rect x="127" y="210" width="46" height="11" rx="3" fill="#5c3a1a"/>
 
-  <!-- tall worn witch hood -->
-  <path d="M150,34 L182,114 C186,140 168,132 150,133 C132,132 114,140 118,114 Z"
-        fill="url(#cloakGrad)" stroke="#6a4018" stroke-width="2"/>
-  <path d="M122,113 a6,6 0 1,0 12,0 a6,6 0 1,0 -12,0 M178,113 a6,6 0 1,0 12,0 a6,6 0 1,0 -12,0"
-        fill="#4a2c0e"/>
-  <path d="M150,66 C164,90 164,108 150,118 C136,108 136,90 150,66 Z" fill="#050507" opacity="0.94"/>
+  <!-- riding crop + horseshoe motif, marking a cavalry commander -->
+  <path d="M188,190 L206,232" stroke="#3a2a10" stroke-width="6" stroke-linecap="round"/>
+  <path d="M118,222 a12,10 0 1,0 24,0 a12,10 0 1,0 -24,0" fill="none" stroke="#e0b84a" stroke-width="4"/>
 
-  <circle cx="110" cy="232" r="5" fill="#ffd23f" opacity="0.85"/>
-  <circle cx="194" cy="226" r="4" fill="#ff2b4d" opacity="0.75"/>
-  <circle cx="116" cy="258" r="3" fill="#ffd23f" opacity="0.6"/>
-  <circle cx="190" cy="252" r="3" fill="#ffd23f" opacity="0.6"/>
+  <path d="M150,56 C186,58 200,90 194,118 C190,132 110,132 106,118 C100,90 114,58 150,56 Z"
+        fill="url(#turbanGrad)" stroke="#5c4408" stroke-width="2"/>
+  <path d="M114,80 C132,73 168,73 186,80" fill="none" stroke="#5c4408" stroke-width="2" opacity="0.6"/>
+  <path d="M110,98 C130,91 170,91 190,98" fill="none" stroke="#5c4408" stroke-width="2" opacity="0.6"/>
+  <path d="M107,112 C128,107 172,107 193,112" fill="none" stroke="#5c4408" stroke-width="2" opacity="0.6"/>
+  <path d="M150,58 L155,74 L150,81 L145,74 Z" fill="#ffcf40" stroke="#5c4408" stroke-width="1.5"/>
 
-  <ellipse cx="136" cy="276" rx="12" ry="6" fill="#0a0605" opacity="0.85"/>
-  <ellipse cx="164" cy="276" rx="12" ry="6" fill="#0a0605" opacity="0.85"/>
+  <ellipse cx="150" cy="120" rx="23" ry="19" fill="#2a2010" opacity="0.9"/>
+  <path d="M137,127 C143,133 157,133 163,127" fill="none" stroke="#14100a" stroke-width="3" opacity="0.85"/>
+
+  <ellipse cx="136" cy="274" rx="12" ry="6" fill="#3a2c10" opacity="0.8"/>
+  <ellipse cx="164" cy="274" rx="12" ry="6" fill="#3a2c10" opacity="0.8"/>
 </svg>

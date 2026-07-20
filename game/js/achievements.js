@@ -2,16 +2,16 @@ window.Game = window.Game || {};
 
 Game.Achievements = (function () {
   const LIST = [
-    { id: 'firstHunt',       name: 'First Hunt',        icon: '🗡',  check: function (d) { return d.totalRuns >= 1; } },
-    { id: 'fullClear',       name: 'Full Clear',        icon: '🛡',  check: function (d) { return d.fullClearRuns >= 1; } },
-    { id: 'waveRider',       name: 'Wave Rider',        icon: '⚡', check: function (d) { return d.bestRunLevel >= 10; } },
-    { id: 'slayersMark',     name: "Slayer's Mark",     icon: '👹', check: function (d) { return d.bestRunKills >= 100; } },
-    { id: 'gemHoarder',      name: 'Gem Hoarder',       icon: '💎', check: function (d) { return d.lifetimeGemsCollected >= 500; } },
-    { id: 'shardCollector',  name: 'Shard Collector',   icon: '🔶', check: function (d) { return d.lifetimeShardsCollected >= 100; } },
-    { id: 'warlordsBane',    name: "Warlord's Bane",    icon: '🏴', check: function (d) { return d.warlordsKilled >= 1; } },
-    { id: 'arsenalComplete', name: 'Arsenal Complete',  icon: '⚔',  check: function (d) { return Game.Camp.allWeaponsUnlocked(); } },
-    { id: 'firstReforge',    name: 'First Reforge',     icon: '💠', check: function (d) { return d.prestigeCount >= 1; } },
-    { id: 'ironWill',        name: 'Iron Will',         icon: '🩸', check: function (d) { return d.closeCallRuns >= 1; } }
+    { id: 'firstHunt',       name: 'First Campaign',    icon: '🗡',  check: function (d) { return d.totalRuns >= 1; } },
+    { id: 'fullClear',       name: 'Fort Defended',     icon: '🏰', check: function (d) { return d.fullClearRuns >= 1; } },
+    { id: 'waveRider',       name: 'Battle-Hardened',   icon: '⚡', check: function (d) { return d.bestRunLevel >= 10; } },
+    { id: 'slayersMark',     name: 'Hundred Foes',      icon: '🐎', check: function (d) { return d.bestRunKills >= 100; } },
+    { id: 'gemHoarder',      name: 'Valor Collector',   icon: '💎', check: function (d) { return d.lifetimeGemsCollected >= 500; } },
+    { id: 'shardCollector',  name: 'Treasury Keeper',   icon: '🔶', check: function (d) { return d.lifetimeShardsCollected >= 100; } },
+    { id: 'warlordsBane',    name: "Commander's Bane",  icon: '🏴', check: function (d) { return d.warlordsKilled >= 1; } },
+    { id: 'arsenalComplete', name: 'Full Arsenal',      icon: '⚔',  check: function (d) { return Game.Camp.allWeaponsUnlocked(); } },
+    { id: 'firstReforge',    name: 'Oath Renewed',      icon: '💠', check: function (d) { return d.prestigeCount >= 1; } },
+    { id: 'ironWill',        name: 'Unbroken Spirit',   icon: '🩸', check: function (d) { return d.closeCallRuns >= 1; } }
   ];
 
   let onUnlock = null;

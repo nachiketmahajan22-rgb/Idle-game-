@@ -10,12 +10,15 @@ Game.Enemies = (function () {
   const BOSS_DASH_MULT = 3;
   const WARLORD_TELEGRAPH_SEC = 2;
 
+  // Generic ranks/unit-types only - deliberately no specific named historical
+  // figure is used as a repeatable enemy/boss, out of respect for the real
+  // people involved in this history.
   const DEFS = {
-    riftWhelp:      { name: 'Rift Whelp',       hp: 12,   speed: 90,  contactDamage: 5,  xpValue: 3,  radius: 10, essenceDropChance: 0.04 },
-    ravenousCur:    { name: 'Ravening Cur',     hp: 18,   speed: 130, contactDamage: 6,  xpValue: 4,  radius: 12, essenceDropChance: 0.04 },
-    boneStalker:    { name: 'Bone Stalker',     hp: 30,   speed: 70,  contactDamage: 8,  xpValue: 6,  radius: 14, essenceDropChance: 0.04 },
-    voidReaper:     { name: 'Void Reaper',      hp: 220,  speed: 55,  contactDamage: 18, xpValue: 20, radius: 22, isElite: true },
-    abyssalWarlord: { name: 'Abyssal Warlord',  hp: 1400, speed: 60,  contactDamage: 30, xpValue: 80, radius: 40, isBoss: true }
+    riftWhelp:      { name: 'Mughal Scout',        hp: 12,   speed: 90,  contactDamage: 5,  xpValue: 3,  radius: 10, essenceDropChance: 0.04 },
+    ravenousCur:    { name: 'Adilshahi Skirmisher', hp: 18,   speed: 130, contactDamage: 6,  xpValue: 4,  radius: 12, essenceDropChance: 0.04 },
+    boneStalker:    { name: 'Mughal Infantry',     hp: 30,   speed: 70,  contactDamage: 8,  xpValue: 6,  radius: 14, essenceDropChance: 0.04 },
+    voidReaper:     { name: 'Mughal Sardar',       hp: 220,  speed: 55,  contactDamage: 18, xpValue: 20, radius: 22, isElite: true },
+    abyssalWarlord: { name: 'Siege Commander',     hp: 1400, speed: 60,  contactDamage: 30, xpValue: 80, radius: 40, isBoss: true }
   };
 
   const GRUNT_WEIGHTS = [

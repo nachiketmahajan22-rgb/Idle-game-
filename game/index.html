@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Blade Hunter: Idle Slayer</title>
+<title>Swarajya: Shivaji's Legacy</title>
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -11,8 +11,8 @@
 <!-- ======================= CAMP (hub) screen ======================= -->
 <div id="screen-camp" class="screen">
   <header id="app-header">
-    <h1 id="app-title">Blade Hunter</h1>
-    <div id="shards-chip" class="chip" title="Blade Shards">
+    <h1 id="app-title">Swarajya</h1>
+    <div id="shards-chip" class="chip" title="Rajmudra">
       <span class="chip-icon">&#9670;</span>
       <span id="blade-shards-chip">0</span>
     </div>
@@ -21,19 +21,19 @@
   <main id="camp-main">
     <div id="camp-essence-readout">
       <div id="camp-essence-count">0</div>
-      <div id="essence-label">Essence</div>
+      <div id="essence-label">Swarajya</div>
     </div>
 
     <div id="character-panel">
-      <h2 class="section-title">Choose Your Hunter</h2>
+      <h2 class="section-title">Choose Your Commander</h2>
       <div id="character-select"></div>
     </div>
 
     <div id="hunt-launch-panel">
-      <button id="begin-hunt-btn">Begin Hunt</button>
+      <button id="begin-hunt-btn">Begin Campaign</button>
       <div class="boost-row">
         <div class="boost-info">
-          <span class="boost-name">Head Start</span>
+          <span class="boost-name">War Preparation</span>
           <span class="boost-desc">Weapons +2 levels, XP bar 30% full</span>
         </div>
         <button id="head-start-btn" class="boost-watch-btn" disabled>Watch Ad</button>
@@ -42,13 +42,13 @@
     </div>
 
     <nav id="camp-tab-nav" class="tab-nav">
-      <button class="tab-btn active" data-tab="gear">Gear Shop</button>
+      <button class="tab-btn active" data-tab="gear">Armory</button>
       <button class="tab-btn" data-tab="stats">Chronicle</button>
-      <button class="tab-btn" data-tab="ascend">Ascend</button>
+      <button class="tab-btn" data-tab="ascend">Legacy</button>
     </nav>
 
     <section id="tab-gear" class="tab-panel active">
-      <h2 class="section-title">Permanent Gear</h2>
+      <h2 class="section-title">Armory</h2>
       <div id="gear-shop-list"></div>
     </section>
 
@@ -60,15 +60,15 @@
     </section>
 
     <section id="tab-ascend" class="tab-panel">
-      <h2 class="section-title">Reforge the Blade</h2>
-      <p class="ascend-blurb">Shatter your blade and reforge it with rift-forged shards, permanently sharpening every future Hunt. Your Essence and Gear reset &mdash; your Shards, Achievements and Chronicle never do.</p>
+      <h2 class="section-title">Renew the Oath</h2>
+      <p class="ascend-blurb">Renew your oath to Swarajya, trading your treasury for Rajmudra that permanently strengthens every future campaign. Your Swarajya and Armory reset &mdash; your Rajmudra, Achievements and Chronicle never do.</p>
       <div id="ascend-stats">
-        <div class="ascend-row"><span>Current Blade Shards</span><span id="shards-current">0</span></div>
+        <div class="ascend-row"><span>Current Rajmudra</span><span id="shards-current">0</span></div>
         <div class="ascend-row"><span>Current Multiplier</span><span id="multiplier-current">+0%</span></div>
-        <div class="ascend-row highlight"><span>Shards on Reforge</span><span id="shards-projected">0</span></div>
+        <div class="ascend-row highlight"><span>Rajmudra on Renewal</span><span id="shards-projected">0</span></div>
         <div class="ascend-row highlight"><span>New Multiplier</span><span id="multiplier-projected">+0%</span></div>
       </div>
-      <button id="reforge-btn" disabled>Reforge the Blade</button>
+      <button id="reforge-btn" disabled>Renew the Oath</button>
     </section>
   </main>
 </div>
@@ -95,7 +95,7 @@
     </div>
   </div>
 
-  <div id="warlord-banner" class="hidden">A Warlord approaches!</div>
+  <div id="warlord-banner" class="hidden">The Siege Commander approaches!</div>
 
   <div id="joystick-base" class="joystick-base hidden"></div>
   <div id="joystick-knob" class="joystick-knob hidden"></div>
@@ -112,7 +112,7 @@
 <div id="death-modal" class="modal-overlay hidden">
   <div class="modal">
     <h2>You Have Fallen</h2>
-    <p>The rift claims another hunter&hellip;</p>
+    <p>The campaign ends here&hellip;</p>
     <button id="death-revive-btn" class="hidden">Watch Ad to Revive</button>
     <button id="death-accept-btn" class="secondary">Accept Defeat</button>
   </div>
@@ -120,10 +120,10 @@
 
 <div id="results-modal" class="modal-overlay hidden">
   <div class="modal">
-    <h2>Hunt Complete</h2>
+    <h2>Campaign Complete</h2>
     <div id="results-stats"></div>
     <button id="results-double-btn" class="hidden">Watch Ad: Double Rewards</button>
-    <button id="results-return-btn">Return to Camp</button>
+    <button id="results-return-btn">Return to Raigad</button>
   </div>
 </div>
 
@@ -137,11 +137,11 @@
 
 <div id="reforge-modal" class="modal-overlay hidden">
   <div class="modal">
-    <h2>Reforge the Blade?</h2>
-    <p>This will reset your Essence and Gear in exchange for <span id="reforge-modal-shards">0</span> Blade Shards.</p>
+    <h2>Renew the Oath?</h2>
+    <p>This will reset your Swarajya and Armory in exchange for <span id="reforge-modal-shards">0</span> Rajmudra.</p>
     <div class="modal-actions">
       <button id="reforge-cancel-btn" class="secondary">Cancel</button>
-      <button id="reforge-confirm-btn">Reforge</button>
+      <button id="reforge-confirm-btn">Renew</button>
     </div>
   </div>
 </div>

@@ -45,7 +45,7 @@ Game.UIHunt = (function () {
       const info = Game.Player.PASSIVE_INFO[card.id];
       return { icon: info.icon, title: info.name, desc: info.desc };
     }
-    return { icon: '\u{1F4B0}', title: 'Essence Cache', desc: '+20 Essence' };
+    return { icon: '\u{1F4B0}', title: 'Swarajya Cache', desc: '+20 Swarajya' };
   }
 
   function bindEvents() {
@@ -129,9 +129,9 @@ Game.UIHunt = (function () {
       { label: 'Result', value: data.fullClear ? 'Full Clear' : 'Retreated' },
       { label: 'Time Survived', value: Game.Utils.formatDuration(data.survivalSeconds) },
       { label: 'Level Reached', value: data.level },
-      { label: 'Enemies Slain', value: data.kills },
-      { label: 'Gems Collected', value: data.gemsCollected },
-      { label: 'Essence Banked', value: fmt(data.bankedEssence) }
+      { label: 'Enemies Routed', value: data.kills },
+      { label: 'Valor Collected', value: data.gemsCollected },
+      { label: 'Swarajya Banked', value: fmt(data.bankedEssence) }
     ];
     els.resultsStats.innerHTML = rows.map(function (r) {
       return '<div class="results-row"><span>' + r.label + '</span><span>' + r.value + '</span></div>';

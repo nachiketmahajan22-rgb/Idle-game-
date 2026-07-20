@@ -1,8 +1,8 @@
-# Privacy Policy — Blade Hunter: Idle Slayer
+# Privacy Policy — Swarajya: Shivaji's Legacy
 
 _Last updated: replace this date when you actually publish._
 
-Blade Hunter: Idle Slayer ("the App") does not collect, store, or transmit any personal data from its users.
+Swarajya: Shivaji's Legacy ("the App") does not collect, store, or transmit any personal data from its users.
 
 ## Data collection
 - All game progress (Essence, generators owned, achievements, prestige state, boost timers) is stored **only locally on your device** using standard web storage (`localStorage`), inside the app's own sandboxed storage area.

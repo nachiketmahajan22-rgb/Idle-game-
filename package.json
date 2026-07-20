@@ -1,8 +1,8 @@
 {
-  "name": "blade-hunter-idle",
+  "name": "swarajya-legacy",
   "version": "1.0.0",
   "private": true,
-  "description": "Blade Hunter: Idle Slayer - dark fantasy incremental game, packaged for Android via Capacitor",
+  "description": "Swarajya: Shivaji's Legacy - real-time bullet-heaven arena game grounded in Maratha history, packaged for Android via Capacitor",
   "scripts": {
     "cap:add:android": "npx cap add android",
     "cap:sync": "npx cap sync",

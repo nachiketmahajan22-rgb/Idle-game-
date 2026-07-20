@@ -9,14 +9,14 @@ Game.UICamp = (function () {
   let achievementTiles = {};
 
   const STAT_TILES = [
-    { key: 'lifetimeEssence', label: 'Lifetime Essence' },
-    { key: 'totalRuns', label: 'Hunts Run' },
-    { key: 'bestRunKills', label: 'Best Run Kills' },
-    { key: 'bestRunLevel', label: 'Best Run Level' },
-    { key: 'lifetimeGemsCollected', label: 'Gems Collected' },
-    { key: 'lifetimeShardsCollected', label: 'Shards Collected' },
-    { key: 'warlordsKilled', label: 'Warlords Slain' },
-    { key: 'prestigeCount', label: 'Reforges' }
+    { key: 'lifetimeEssence', label: 'Lifetime Swarajya' },
+    { key: 'totalRuns', label: 'Campaigns Fought' },
+    { key: 'bestRunKills', label: 'Best Campaign Kills' },
+    { key: 'bestRunLevel', label: 'Best Campaign Level' },
+    { key: 'lifetimeGemsCollected', label: 'Valor Collected' },
+    { key: 'lifetimeShardsCollected', label: 'Hon Collected' },
+    { key: 'warlordsKilled', label: 'Commanders Slain' },
+    { key: 'prestigeCount', label: 'Oaths Renewed' }
   ];
 
   function cacheEls() {
@@ -260,8 +260,8 @@ Game.UICamp = (function () {
   }
 
   function showOfflineModal(amount, elapsedSeconds) {
-    els.offlineText.textContent = 'While you were away, your Essence Trickle Shrine gathered ' +
-      fmt(amount) + ' Essence over ' + Game.Utils.formatClock(elapsedSeconds) + '.';
+    els.offlineText.textContent = 'While you were away, your Swarajya Treasury gathered ' +
+      fmt(amount) + ' Swarajya over ' + Game.Utils.formatClock(elapsedSeconds) + '.';
     els.offlineModal.classList.remove('hidden');
   }
 

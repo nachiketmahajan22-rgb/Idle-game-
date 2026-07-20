@@ -6,12 +6,13 @@
       <stop offset="100%" stop-color="#8d8b96"/>
     </linearGradient>
   </defs>
-  <!-- Single blade, matching the in-game tap button. Scaled + kept within the
-       ~66dp adaptive-icon safe zone centered on this 108x108 canvas. -->
+  <!-- Single curved talwar. Scaled + kept within the ~66dp adaptive-icon safe
+       zone centered on this 108x108 canvas. -->
   <g transform="translate(54,54) scale(0.26) rotate(-15)">
-    <rect x="-14" y="-85" width="28" height="120" rx="6" fill="url(#fgBladeGrad)"/>
-    <polygon points="-14,-85 14,-85 0,-115" fill="url(#fgBladeGrad)"/>
-    <rect x="-30" y="35" width="60" height="16" rx="6" fill="#ff2b4d"/>
-    <rect x="-11" y="51" width="22" height="45" rx="6" fill="#5a4632"/>
+    <path d="M-12,-85 C-20,-40 -15,25 -9,55 L9,55 C11,25 15,-40 11,-85
+             C5,-95 -5,-95 -12,-85 Z" fill="url(#fgBladeGrad)"/>
+    <polygon points="-11,-85 10,-85 -1,-115" fill="url(#fgBladeGrad)"/>
+    <rect x="-30" y="55" width="60" height="16" rx="6" fill="#c9600f"/>
+    <rect x="-11" y="71" width="22" height="45" rx="6" fill="#5a4632"/>
   </g>
 </svg>

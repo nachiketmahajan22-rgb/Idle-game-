@@ -10,23 +10,24 @@ Game.Player = (function () {
   const PASSIVE_IDS = ['vitality', 'swiftBoots', 'bloodMagnet', 'momentum', 'quickening', 'essenceSense'];
 
   const PASSIVE_INFO = {
-    vitality:     { name: 'Vitality',      icon: '❤', desc: '+20 max HP, +10 instant heal' },
-    swiftBoots:   { name: 'Swift Boots',   icon: '👢', desc: '+8% move speed' },
-    bloodMagnet:  { name: 'Blood Magnet',  icon: '🧲', desc: '+25% pickup radius' },
-    momentum:     { name: 'Momentum',      icon: '🌀', desc: '+6% all weapon damage' },
-    quickening:   { name: 'Quickening',    icon: '⏱', desc: '+5% attack speed, all weapons' },
-    essenceSense: { name: 'Essence Sense', icon: '🔶', desc: '+15% essence shard drop chance' }
+    vitality:     { name: 'Kavach Blessing', icon: '❤', desc: '+20 max HP, +10 instant heal' },
+    swiftBoots:   { name: 'Ashwa Gati',      icon: '👢', desc: '+8% move speed' },
+    bloodMagnet:  { name: "Scout's Eye",     icon: '🧲', desc: '+25% pickup radius' },
+    momentum:     { name: 'Momentum',        icon: '🌀', desc: '+6% all weapon damage' },
+    quickening:   { name: 'Quickening',      icon: '⏱', desc: '+5% attack speed, all weapons' },
+    essenceSense: { name: 'Swarajya Sense',  icon: '🔶', desc: '+15% Hon drop chance' }
   };
 
-  // Cosmetic only - no stat differences between characters. Each has a hand-illustrated
-  // sprite (assets/characters/<id>.png) drawn upright and flipped horizontally to face
-  // left/right in the arena; accentColor still drives the held blade's color and the
-  // Camp selection UI's highlight.
+  // Cosmetic only - no stat differences between the four historical companions.
+  // Each has a hand-illustrated sprite (assets/characters/<id>.png) in proper
+  // Maratha attire (pagadi turban, angarkha), drawn upright and flipped
+  // horizontally to face left/right in the arena; accentColor still drives the
+  // held blade's color and the Camp selection UI's highlight.
   const CHARACTERS = [
-    { id: 'bladeHunter', name: 'Blade Hunter', icon: '⚔', image: 'assets/characters/bladeHunter.png', accentColor: '#ff2b4d' },
-    { id: 'shadowRogue',  name: 'Shadow Rogue', icon: '🗡', image: 'assets/characters/shadowRogue.png', accentColor: '#6a3df5' },
-    { id: 'ironWarden',   name: 'Iron Warden',  icon: '🛡', image: 'assets/characters/ironWarden.png', accentColor: '#8a8790' },
-    { id: 'emberWitch',   name: 'Ember Witch',  icon: '🔥', image: 'assets/characters/emberWitch.png', accentColor: '#ffd23f' }
+    { id: 'bladeHunter', name: 'Shivaji Maharaj',     icon: '👑', image: 'assets/characters/bladeHunter.png', accentColor: '#ff8c1a' },
+    { id: 'shadowRogue',  name: 'Tanaji Malusare',     icon: '🦁', image: 'assets/characters/shadowRogue.png', accentColor: '#3a7d44' },
+    { id: 'ironWarden',   name: 'Bajiprabhu Deshpande', icon: '🛡', image: 'assets/characters/ironWarden.png', accentColor: '#4a6fa5' },
+    { id: 'emberWitch',   name: 'Netaji Palkar',       icon: '🐎', image: 'assets/characters/emberWitch.png', accentColor: '#c9a227' }
   ];
 
   let run = null;

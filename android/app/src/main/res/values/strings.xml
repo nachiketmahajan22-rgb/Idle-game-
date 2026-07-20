@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Blade Hunter: Idle Slayer</string>
-    <string name="title_activity_main">Blade Hunter: Idle Slayer</string>
+    <string name="app_name">Swarajya: Shivaji's Legacy</string>
+    <string name="title_activity_main">Swarajya: Shivaji's Legacy</string>
     <string name="package_name">com.bladehunter.idle</string>
     <string name="custom_url_scheme">com.bladehunter.idle</string>
 </resources>

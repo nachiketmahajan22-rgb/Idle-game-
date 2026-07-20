@@ -485,8 +485,8 @@ Game.Arena = (function () {
 
   function drawGround(w, h) {
     const grad = ctx.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, Math.max(w, h) * 0.72);
-    grad.addColorStop(0, '#15151f');
-    grad.addColorStop(1, '#08080c');
+    grad.addColorStop(0, '#1c1408');
+    grad.addColorStop(1, '#0a0602');
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, w, h);
   }
@@ -631,7 +631,7 @@ Game.Arena = (function () {
 
       if (enemy.maxHp > 200) {
         const barW = enemy.radius * 2;
-        ctx.fillStyle = '#2a2a35';
+        ctx.fillStyle = '#3a2a18';
         ctx.fillRect(p.x - barW / 2, p.y - enemy.radius - 10, barW, 4);
         ctx.fillStyle = '#ff2b4d';
         ctx.fillRect(p.x - barW / 2, p.y - enemy.radius - 10, barW * Math.max(0, enemy.hp / enemy.maxHp), 4);

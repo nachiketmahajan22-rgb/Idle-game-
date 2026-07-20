@@ -1,12 +1,12 @@
 :root {
-  --bg-void: #0a0a0f;
-  --bg-panel: #12121a;
-  --bg-panel-raised: #191922;
-  --border: #2a2a35;
+  --bg-void: #0a0602;
+  --bg-panel: #150f08;
+  --bg-panel-raised: #1c140a;
+  --border: #3a2a18;
   --text-primary: #e8e6e3;
-  --text-muted: #8a8790;
-  --blood-red: #b3121f;
-  --neon-crimson: #ff2b4d;
+  --text-muted: #a8967a;
+  --blood-red: #a6440a;
+  --neon-crimson: #ff8c1a;
   --prestige-violet: #6a3df5;
   --gold-flash: #ffd23f;
 }
@@ -59,7 +59,7 @@ html, body {
   text-transform: uppercase;
   margin: 0;
   color: var(--text-primary);
-  text-shadow: 0 0 8px rgba(255, 43, 77, 0.6);
+  text-shadow: 0 0 8px rgba(255, 140, 26, 0.6);
 }
 
 .chip {
@@ -95,7 +95,7 @@ html, body {
   font-size: 2.4rem;
   font-weight: bold;
   color: var(--text-primary);
-  text-shadow: 0 0 10px rgba(255, 43, 77, 0.35);
+  text-shadow: 0 0 10px rgba(255, 140, 26, 0.35);
 }
 
 #essence-label {
@@ -130,7 +130,7 @@ html, body {
 
 .character-btn.selected {
   border-color: var(--char-color, var(--neon-crimson));
-  box-shadow: 0 0 10px rgba(255, 43, 77, 0.3);
+  box-shadow: 0 0 10px rgba(255, 140, 26, 0.3);
   color: var(--text-primary);
 }
 
@@ -162,7 +162,7 @@ html, body {
   letter-spacing: 0.1em;
   font-size: 1.05rem;
   font-weight: bold;
-  box-shadow: 0 0 20px rgba(255, 43, 77, 0.3);
+  box-shadow: 0 0 20px rgba(255, 140, 26, 0.3);
 }
 
 /* ---------- Shared: boost-style rows (Head Start) ---------- */
@@ -233,7 +233,7 @@ html, body {
 .tab-btn.active {
   color: var(--text-primary);
   border-color: var(--neon-crimson);
-  box-shadow: 0 0 10px rgba(255, 43, 77, 0.3);
+  box-shadow: 0 0 10px rgba(255, 140, 26, 0.3);
 }
 
 .tab-panel {
@@ -474,7 +474,7 @@ html, body {
   font-variant-numeric: tabular-nums;
   font-size: 1.1rem;
   font-weight: bold;
-  text-shadow: 0 0 8px rgba(255, 43, 77, 0.5);
+  text-shadow: 0 0 8px rgba(255, 140, 26, 0.5);
 }
 
 #hud-essence-readout {
@@ -550,7 +550,7 @@ html, body {
   letter-spacing: 0.1em;
   font-size: 1.3rem;
   color: var(--neon-crimson);
-  text-shadow: 0 0 16px rgba(255, 43, 77, 0.9);
+  text-shadow: 0 0 16px rgba(255, 140, 26, 0.9);
   pointer-events: none;
   animation: warlord-flash 2.5s ease-in-out forwards;
 }
@@ -575,13 +575,13 @@ html, body {
   width: 100px;
   height: 100px;
   background: rgba(255, 255, 255, 0.05);
-  border: 2px solid rgba(255, 43, 77, 0.4);
+  border: 2px solid rgba(255, 140, 26, 0.4);
 }
 
 .joystick-knob {
   width: 44px;
   height: 44px;
-  background: rgba(255, 43, 77, 0.5);
+  background: rgba(255, 140, 26, 0.5);
   border: 2px solid var(--neon-crimson);
 }
 
@@ -661,7 +661,7 @@ html, body {
   max-width: 360px;
   width: 100%;
   text-align: center;
-  box-shadow: 0 0 30px rgba(255, 43, 77, 0.35);
+  box-shadow: 0 0 30px rgba(255, 140, 26, 0.35);
 }
 
 .modal h2 {
@@ -669,7 +669,7 @@ html, body {
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--text-primary);
-  text-shadow: 0 0 8px rgba(255, 43, 77, 0.6);
+  text-shadow: 0 0 8px rgba(255, 140, 26, 0.6);
   margin-top: 0;
 }
 

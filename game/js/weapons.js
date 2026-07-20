@@ -6,33 +6,33 @@ Game.Weapons = (function () {
 
   const DEFS = {
     bladeAcolyte: {
-      name: 'Blade Acolyte', kind: 'meleeArc', icon: '⚔',
+      name: 'Talwar Strike', kind: 'meleeArc', icon: '⚔',
       baseDamage: 12, damageGrowth: 1.15,
       baseCooldown: 0.90, cooldownMult: 0.96, minCooldown: 0.5,
       range: 90, baseArc: 100, arcBonusLevels: [5, 8], arcBonusDeg: 15
     },
     shadowBlade: {
-      name: 'Shadow Blade', kind: 'homingProjectile', icon: '🗡',
+      name: 'Wagh Nakh Throw', kind: 'homingProjectile', icon: '🐾',
       baseDamage: 8, damageGrowth: 1.12,
       baseCooldown: 0.60, cooldownMult: 0.95, minCooldown: 0.3,
       projectileSpeed: 400, maxLifetimeSec: 2,
       basePierce: 1, pierceBonusLevels: [4, 8], countBonusLevel: 6
     },
     riftTurret: {
-      name: 'Rift Turret', kind: 'turret', icon: '🔮',
+      name: 'Watch Tower Archer', kind: 'turret', icon: '🏹',
       baseDamage: 6, damageGrowth: 1.10,
       fireRate: 2, baseRange: 220, rangeBonusLevels: [3, 7], rangeBonusMult: 1.15,
       secondTurretLevel: 5, redeployInterval: 6,
       projectileSpeed: 500, maxLifetimeSec: 1.5
     },
     bloodHoundPack: {
-      name: 'Blood Hound Pack', kind: 'orbit', icon: '🐺',
+      name: 'Loyal Mavlas', kind: 'orbit', icon: '🛡',
       baseDamage: 10, damageGrowth: 1.10,
       orbitRadius: 70, orbitSpeedDeg: 180, hitCooldown: 0.5,
       baseCount: 1, countBonusLevels: [3, 6]
     },
     cursedCathedral: {
-      name: 'Cursed Cathedral', kind: 'aoePulse', icon: '⛪',
+      name: 'Rann Shinga', kind: 'aoePulse', icon: '📯',
       baseDamage: 18, damageGrowth: 1.18,
       baseCooldown: 3.00, cooldownMult: 0.95, minCooldown: 1.8,
       baseRadius: 130, radiusBonusLevels: [4, 8], radiusBonusMult: 0.10,
