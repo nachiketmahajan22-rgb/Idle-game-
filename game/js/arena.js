@@ -4,6 +4,7 @@ Game.Arena = (function () {
   const RUN_DURATION_SEC = 180;
   const DEATH_PROMPT_TIMEOUT_SEC = 5;
   const MAX_DT = 0.05;
+  const BLADE_SPIN_RAD_PER_SEC = 4.2; // ~1.5s per full rotation
 
   let canvas = null;
   let ctx = null;
@@ -376,20 +377,17 @@ Game.Arena = (function () {
   // terrain instead of flat single-color fills, which is what was reading as
   // "just a dot" before.
 
-  const ENEMY_COLORS = {
-    riftWhelp: '#b3121f',
-    ravenousCur: '#ff6b3d',
-    boneStalker: '#cfcdd6',
-    voidReaper: '#6a3df5',
-    abyssalWarlord: '#12121a'
-  };
-
-  const ENEMY_SHAPES = {
-    riftWhelp: 'triangle',
-    ravenousCur: 'diamond',
-    boneStalker: 'square',
-    voidReaper: 'circle',
-    abyssalWarlord: 'hexagon'
+  // Generic-rank soldier silhouettes only - see enemies.js for the note on why
+  // no named historical figure is used here. Mughal ranks read in warm
+  // red/maroon+gold with an angular peaked turban; the Adilshahi (Bijapur)
+  // skirmisher uses a distinct teal/indigo palette with a rounder Deccani cap
+  // so the two factions stay visually distinguishable at a glance.
+  const ENEMY_PALETTE = {
+    riftWhelp:      { body: '#6b5a34', turban: '#8a7644', trim: '#3a2f1a', style: 'peak' },
+    ravenousCur:    { body: '#274a5c', turban: '#356f88', trim: '#12242c', style: 'dome' },
+    boneStalker:    { body: '#7a2418', turban: '#9c3420', trim: '#d8b866', style: 'peakShield' },
+    voidReaper:     { body: '#8a1a1a', turban: '#b3121f', trim: '#ffd23f', style: 'peakPlume' },
+    abyssalWarlord: { body: '#26262c', turban: '#17171c', trim: '#ff2b4d', style: 'spiked' }
   };
 
   const TERRAIN_CELL = 220;
@@ -434,32 +432,73 @@ Game.Arena = (function () {
     ctx.fill();
   }
 
-  function drawShapePath(shape, x, y, r) {
+  function drawEnemySoldier(defId, x, y, r) {
+    const pal = ENEMY_PALETTE[defId] || ENEMY_PALETTE.riftWhelp;
+
+    // torso
+    ctx.fillStyle = radialShade(x, y + r * 0.22, r * 0.95, pal.body, 0.28);
     ctx.beginPath();
-    if (shape === 'triangle') {
-      ctx.moveTo(x, y - r);
-      ctx.lineTo(x + r * 0.87, y + r * 0.5);
-      ctx.lineTo(x - r * 0.87, y + r * 0.5);
+    ctx.ellipse(x, y + r * 0.25, r * 0.78, r * 0.85, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+    ctx.lineWidth = Math.max(1, r * 0.08);
+    ctx.stroke();
+
+    // turban/helm, shape varies by rank
+    ctx.fillStyle = radialShade(x, y - r * 0.5, r * 0.7, pal.turban, 0.32);
+    ctx.beginPath();
+    if (pal.style === 'dome') {
+      // rounder Deccani cap - Adilshahi Skirmisher
+      ctx.arc(x, y - r * 0.42, r * 0.62, Math.PI, 0);
       ctx.closePath();
-    } else if (shape === 'diamond') {
-      ctx.moveTo(x, y - r);
-      ctx.lineTo(x + r, y);
-      ctx.lineTo(x, y + r);
-      ctx.lineTo(x - r, y);
-      ctx.closePath();
-    } else if (shape === 'square') {
-      const s = r * 0.85;
-      ctx.rect(x - s, y - s, s * 2, s * 2);
-    } else if (shape === 'hexagon') {
-      for (let i = 0; i < 6; i++) {
-        const a = (Math.PI / 3) * i - Math.PI / 2;
-        const px = x + r * Math.cos(a);
-        const py = y + r * Math.sin(a);
-        if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
-      }
+    } else if (pal.style === 'spiked') {
+      // heavy siege helm with a central spike
+      ctx.moveTo(x - r * 0.62, y - r * 0.12);
+      ctx.quadraticCurveTo(x, y - r * 1.35, x + r * 0.62, y - r * 0.12);
       ctx.closePath();
     } else {
-      ctx.arc(x, y, r, 0, Math.PI * 2);
+      // angular peaked Mughal turban - scout/infantry/sardar
+      ctx.moveTo(x - r * 0.58, y - r * 0.18);
+      ctx.quadraticCurveTo(x - r * 0.08, y - r * 1.1, x, y - r * 1.22);
+      ctx.quadraticCurveTo(x + r * 0.08, y - r * 1.1, x + r * 0.58, y - r * 0.18);
+      ctx.closePath();
+    }
+    ctx.fill();
+    ctx.stroke();
+
+    if (pal.style === 'spiked') {
+      ctx.fillStyle = pal.trim;
+      ctx.beginPath();
+      ctx.moveTo(x - r * 0.09, y - r * 1.15);
+      ctx.lineTo(x + r * 0.09, y - r * 1.15);
+      ctx.lineTo(x, y - r * 1.55);
+      ctx.closePath();
+      ctx.fill();
+    } else if (pal.style === 'peakPlume') {
+      ctx.strokeStyle = pal.trim;
+      ctx.lineWidth = Math.max(1, r * 0.12);
+      ctx.beginPath();
+      ctx.moveTo(x, y - r * 1.05);
+      ctx.lineTo(x + r * 0.3, y - r * 1.45);
+      ctx.stroke();
+    } else if (pal.style === 'peakShield') {
+      ctx.fillStyle = pal.trim;
+      ctx.beginPath();
+      ctx.ellipse(x - r * 0.92, y + r * 0.2, r * 0.26, r * 0.4, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(0,0,0,0.4)';
+      ctx.lineWidth = Math.max(1, r * 0.06);
+      ctx.stroke();
+    }
+
+    // weapon glint (small, only reads clearly on the bigger ranks)
+    if (r >= 14) {
+      ctx.strokeStyle = 'rgba(232,230,227,0.85)';
+      ctx.lineWidth = Math.max(1, r * 0.1);
+      ctx.beginPath();
+      ctx.moveTo(x + r * 0.6, y + r * 0.1);
+      ctx.lineTo(x + r * 1.15, y - r * 0.55);
+      ctx.stroke();
     }
   }
 
@@ -552,7 +591,10 @@ Game.Arena = (function () {
 
   function drawPlayer(w, h, facing) {
     const character = Game.Player.getSelectedCharacter();
-    const angle = Math.atan2(facing.y, facing.x);
+    // The held blade spins continuously around the hunter rather than only
+    // snapping to face the current attack direction - reads as a live,
+    // active weapon instead of a static prop.
+    const angle = (run.elapsed * BLADE_SPIN_RAD_PER_SEC) % (Math.PI * 2);
     const cx = w / 2;
     const cy = h / 2;
 
@@ -617,17 +659,9 @@ Game.Arena = (function () {
     Game.Enemies.getActive().forEach(function (enemy) {
       const p = worldToScreen(enemy.x, enemy.y, cx, cy);
       if (p.x < -60 || p.x > w + 60 || p.y < -60 || p.y > h + 60) return;
-      const color = ENEMY_COLORS[enemy.defId] || '#b3121f';
-      const shape = ENEMY_SHAPES[enemy.defId] || 'circle';
 
       drawShadowEllipse(p.x, p.y + enemy.radius * 0.55, enemy.radius * 0.9, enemy.radius * 0.32);
-
-      drawShapePath(shape, p.x, p.y, enemy.radius);
-      ctx.fillStyle = radialShade(p.x, p.y, enemy.radius, color, 0.3);
-      ctx.fill();
-      ctx.strokeStyle = 'rgba(0,0,0,0.5)';
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
+      drawEnemySoldier(enemy.defId, p.x, p.y, enemy.radius);
 
       if (enemy.maxHp > 200) {
         const barW = enemy.radius * 2;
