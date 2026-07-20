@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300">
+  <defs>
+    <radialGradient id="cloakGrad" cx="30%" cy="15%" r="90%">
+      <stop offset="0%" stop-color="#6a4018"/>
+      <stop offset="100%" stop-color="#241206"/>
+    </radialGradient>
+    <radialGradient id="bodyGrad" cx="30%" cy="15%" r="90%">
+      <stop offset="0%" stop-color="#3e2c1e"/>
+      <stop offset="100%" stop-color="#160c0c"/>
+    </radialGradient>
+    <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="10" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <ellipse cx="150" cy="170" rx="105" ry="112" fill="none" stroke="#ffd23f" stroke-width="3" opacity="0.35" filter="url(#glow)"/>
+
+  <path d="M114,130 C68,162 48,220 64,272
+           L80,292 L96,274 L112,294 L128,276 L150,296 L172,276 L188,294 L204,274 L220,292 L236,272
+           C252,220 232,162 186,130 C180,152 120,152 114,130 Z" fill="url(#cloakGrad)"/>
+  <path d="M104,192 C94,225 100,255 116,272" fill="none" stroke="#ffd23f" stroke-opacity="0.28" stroke-width="2"/>
+  <path d="M196,192 C206,225 200,255 184,272" fill="none" stroke="#ffd23f" stroke-opacity="0.28" stroke-width="2"/>
+
+  <path d="M150,142 L174,163 L167,246 L150,260 L133,246 L126,163 Z" fill="url(#bodyGrad)" stroke="#5a4222" stroke-width="3"/>
+  <path d="M132,166 L168,242" stroke="#2a1a08" stroke-width="7" opacity="0.85"/>
+  <circle cx="150" cy="204" r="10" fill="#ffd23f" opacity="0.85"/>
+  <circle cx="150" cy="204" r="10" fill="none" stroke="#2a1a08" stroke-width="2"/>
+
+  <!-- tall worn witch hood -->
+  <path d="M150,34 L182,114 C186,140 168,132 150,133 C132,132 114,140 118,114 Z"
+        fill="url(#cloakGrad)" stroke="#6a4018" stroke-width="2"/>
+  <path d="M122,113 a6,6 0 1,0 12,0 a6,6 0 1,0 -12,0 M178,113 a6,6 0 1,0 12,0 a6,6 0 1,0 -12,0"
+        fill="#4a2c0e"/>
+  <path d="M150,66 C164,90 164,108 150,118 C136,108 136,90 150,66 Z" fill="#050507" opacity="0.94"/>
+
+  <circle cx="110" cy="232" r="5" fill="#ffd23f" opacity="0.85"/>
+  <circle cx="194" cy="226" r="4" fill="#ff2b4d" opacity="0.75"/>
+  <circle cx="116" cy="258" r="3" fill="#ffd23f" opacity="0.6"/>
+  <circle cx="190" cy="252" r="3" fill="#ffd23f" opacity="0.6"/>
+
+  <ellipse cx="136" cy="276" rx="12" ry="6" fill="#0a0605" opacity="0.85"/>
+  <ellipse cx="164" cy="276" rx="12" ry="6" fill="#0a0605" opacity="0.85"/>
+</svg>

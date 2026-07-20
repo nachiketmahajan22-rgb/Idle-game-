@@ -18,14 +18,15 @@ Game.Player = (function () {
     essenceSense: { name: 'Essence Sense', icon: '🔶', desc: '+15% essence shard drop chance' }
   };
 
-  // Cosmetic only - no stat differences between characters, purely which colors/icon
-  // draw the on-screen hunter in the arena. Canvas-drawn (cloak + body + blade), no
-  // image assets, consistent with the rest of the game's zero-binary-asset approach.
+  // Cosmetic only - no stat differences between characters. Each has a hand-illustrated
+  // sprite (assets/characters/<id>.png) drawn upright and flipped horizontally to face
+  // left/right in the arena; accentColor still drives the held blade's color and the
+  // Camp selection UI's highlight.
   const CHARACTERS = [
-    { id: 'bladeHunter', name: 'Blade Hunter', icon: '⚔', bodyColor: '#e8e6e3', cloakColor: '#3a1015', accentColor: '#ff2b4d' },
-    { id: 'shadowRogue',  name: 'Shadow Rogue', icon: '🗡', bodyColor: '#2a2a35', cloakColor: '#12121a', accentColor: '#6a3df5' },
-    { id: 'ironWarden',   name: 'Iron Warden',  icon: '🛡', bodyColor: '#cfcdd6', cloakColor: '#191922', accentColor: '#8a8790' },
-    { id: 'emberWitch',   name: 'Ember Witch',  icon: '🔥', bodyColor: '#1a0f0f', cloakColor: '#3a1a05', accentColor: '#ffd23f' }
+    { id: 'bladeHunter', name: 'Blade Hunter', icon: '⚔', image: 'assets/characters/bladeHunter.png', accentColor: '#ff2b4d' },
+    { id: 'shadowRogue',  name: 'Shadow Rogue', icon: '🗡', image: 'assets/characters/shadowRogue.png', accentColor: '#6a3df5' },
+    { id: 'ironWarden',   name: 'Iron Warden',  icon: '🛡', image: 'assets/characters/ironWarden.png', accentColor: '#8a8790' },
+    { id: 'emberWitch',   name: 'Ember Witch',  icon: '🔥', image: 'assets/characters/emberWitch.png', accentColor: '#ffd23f' }
   ];
 
   let run = null;

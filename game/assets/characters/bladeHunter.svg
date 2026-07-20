@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300">
+  <defs>
+    <radialGradient id="cloakGrad" cx="30%" cy="15%" r="90%">
+      <stop offset="0%" stop-color="#5a2a28"/>
+      <stop offset="100%" stop-color="#26100c"/>
+    </radialGradient>
+    <radialGradient id="bodyGrad" cx="30%" cy="15%" r="90%">
+      <stop offset="0%" stop-color="#d9c9a8"/>
+      <stop offset="100%" stop-color="#a89372"/>
+    </radialGradient>
+    <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="9" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <ellipse cx="150" cy="170" rx="105" ry="112" fill="none" stroke="#ff2b4d" stroke-width="3" opacity="0.25" filter="url(#glow)"/>
+
+  <!-- weathered cloak, tattered hem -->
+  <path d="M112,128 C72,158 52,215 66,268
+           L82,288 L98,270 L114,290 L130,272 L150,292 L170,272 L186,290 L202,270 L218,288 L234,268
+           C248,215 228,158 188,128 C182,150 118,150 112,128 Z" fill="url(#cloakGrad)"/>
+  <path d="M112,128 C90,175 88,230 96,272" fill="none" stroke="#000" stroke-opacity="0.28" stroke-width="3"/>
+  <path d="M188,128 C210,175 212,230 204,272" fill="none" stroke="#000" stroke-opacity="0.28" stroke-width="3"/>
+
+  <!-- worn leather tunic -->
+  <path d="M150,140 L176,162 L169,244 L150,258 L131,244 L124,162 Z" fill="url(#bodyGrad)" stroke="#6b5638" stroke-width="3"/>
+
+  <!-- crossed leather straps + buckle instead of a shiny plate -->
+  <path d="M130,163 L172,238" stroke="#4a3120" stroke-width="9" opacity="0.9"/>
+  <path d="M170,163 L128,238" stroke="#4a3120" stroke-width="9" opacity="0.9"/>
+  <circle cx="150" cy="200" r="11" fill="#ff2b4d" opacity="0.85"/>
+  <circle cx="150" cy="200" r="11" fill="none" stroke="#2a1a10" stroke-width="2.5"/>
+
+  <!-- pointed hood, worn/asymmetric -->
+  <path d="M150,50 C186,58 203,94 197,130 C193,140 172,132 150,133 C128,132 107,140 103,130
+           C97,94 114,58 150,50 Z" fill="url(#cloakGrad)" stroke="#7a3a30" stroke-width="2"/>
+  <!-- fur/leather collar scallops -->
+  <path d="M106,128 a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0 M124,131 a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0
+           M142,132 a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0 M160,131 a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0
+           M178,128 a7,7 0 1,0 14,0 a7,7 0 1,0 -14,0" fill="#6b3a30"/>
+
+  <ellipse cx="150" cy="106" rx="26" ry="23" fill="#050507" opacity="0.94"/>
+  <circle cx="141" cy="103" r="2.5" fill="#ff2b4d"/>
+  <circle cx="159" cy="103" r="2.5" fill="#ff2b4d"/>
+
+  <ellipse cx="136" cy="274" rx="12" ry="6" fill="#1a0a0c" opacity="0.8"/>
+  <ellipse cx="164" cy="274" rx="12" ry="6" fill="#1a0a0c" opacity="0.8"/>
+</svg>

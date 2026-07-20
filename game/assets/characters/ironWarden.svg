@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300">
+  <defs>
+    <radialGradient id="cloakGrad" cx="30%" cy="15%" r="90%">
+      <stop offset="0%" stop-color="#32323f"/>
+      <stop offset="100%" stop-color="#131318"/>
+    </radialGradient>
+    <radialGradient id="bodyGrad" cx="30%" cy="15%" r="90%">
+      <stop offset="0%" stop-color="#c8c4ba"/>
+      <stop offset="100%" stop-color="#8c8a86"/>
+    </radialGradient>
+    <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="9" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <ellipse cx="150" cy="170" rx="105" ry="112" fill="none" stroke="#a8a6b0" stroke-width="3" opacity="0.25" filter="url(#glow)"/>
+
+  <path d="M110,136 C68,164 50,220 64,270
+           L80,290 L96,272 L112,292 L128,274 L150,294 L172,274 L188,292 L204,272 L220,290 L236,270
+           C250,220 232,164 190,136 C184,158 116,158 110,136 Z" fill="url(#cloakGrad)"/>
+  <path d="M110,136 C88,182 86,236 100,272" fill="none" stroke="#000" stroke-opacity="0.3" stroke-width="3"/>
+  <path d="M190,136 C212,182 214,236 200,272" fill="none" stroke="#000" stroke-opacity="0.3" stroke-width="3"/>
+
+  <path d="M150,148 L178,168 L171,246 L150,260 L129,246 L122,168 Z" fill="url(#bodyGrad)" stroke="#6a6862" stroke-width="3"/>
+  <path d="M136,205 L164,205 M136,218 L164,218" stroke="#5a5852" stroke-width="3" opacity="0.7"/>
+
+  <!-- pauldrons -->
+  <ellipse cx="108" cy="172" rx="19" ry="15" fill="url(#bodyGrad)" stroke="#6a6862" stroke-width="2.5"/>
+  <ellipse cx="192" cy="172" rx="19" ry="15" fill="url(#bodyGrad)" stroke="#6a6862" stroke-width="2.5"/>
+
+  <!-- classic open-face knight helm: rounded dome + nose guard, not a sci-fi visor -->
+  <ellipse cx="150" cy="108" rx="39" ry="42" fill="url(#bodyGrad)" stroke="#6a6862" stroke-width="3"/>
+  <path d="M118,98 C124,72 176,72 182,98" fill="none" stroke="#5a5852" stroke-width="4"/>
+  <path d="M144,96 L138,124 L150,132 L162,124 L156,96 Z" fill="#0a0a0e" opacity="0.85"/>
+  <ellipse cx="132" cy="104" rx="7" ry="5" fill="#0a0a0e" opacity="0.8"/>
+  <ellipse cx="168" cy="104" rx="7" ry="5" fill="#0a0a0e" opacity="0.8"/>
+  <!-- small crest plume -->
+  <path d="M150,64 C144,50 156,38 150,26 C158,36 168,48 158,62 Z" fill="#8a8790" opacity="0.9"/>
+
+  <ellipse cx="136" cy="276" rx="13" ry="6" fill="#0a0a0e" opacity="0.85"/>
+  <ellipse cx="164" cy="276" rx="13" ry="6" fill="#0a0a0e" opacity="0.85"/>
+</svg>

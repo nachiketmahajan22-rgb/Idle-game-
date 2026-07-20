@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300">
+  <defs>
+    <radialGradient id="cloakGrad" cx="30%" cy="15%" r="90%">
+      <stop offset="0%" stop-color="#2e2e40"/>
+      <stop offset="100%" stop-color="#0d0d14"/>
+    </radialGradient>
+    <radialGradient id="bodyGrad" cx="30%" cy="15%" r="90%">
+      <stop offset="0%" stop-color="#48485c"/>
+      <stop offset="100%" stop-color="#242430"/>
+    </radialGradient>
+    <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="9" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <ellipse cx="150" cy="170" rx="105" ry="112" fill="none" stroke="#6a3df5" stroke-width="3" opacity="0.3" filter="url(#glow)"/>
+
+  <path d="M116,132 C74,162 56,218 70,270
+           L86,290 L102,272 L118,292 L134,274 L150,294 L166,274 L182,292 L198,272 L214,290 L230,270
+           C244,218 226,162 184,132 C178,152 122,152 116,132 Z" fill="url(#cloakGrad)"/>
+  <path d="M116,132 C96,178 94,232 106,270" fill="none" stroke="#000" stroke-opacity="0.3" stroke-width="3"/>
+  <path d="M184,132 C204,178 206,232 194,270" fill="none" stroke="#000" stroke-opacity="0.3" stroke-width="3"/>
+
+  <path d="M150,144 L172,164 L166,244 L150,258 L134,244 L128,164 Z" fill="url(#bodyGrad)" stroke="#4a4a5a" stroke-width="3"/>
+  <path d="M132,166 L168,240" stroke="#1a1a22" stroke-width="7" opacity="0.85"/>
+
+  <!-- twin daggers sheathed at the hip -->
+  <path d="M118,192 L102,234 L116,240 L130,198 Z" fill="#8a8a9a" opacity="0.9"/>
+  <path d="M182,192 L198,234 L184,240 L170,198 Z" fill="#8a8a9a" opacity="0.9"/>
+  <rect x="110" y="184" width="10" height="12" fill="#4a3020"/>
+  <rect x="180" y="184" width="10" height="12" fill="#4a3020"/>
+
+  <!-- low sleek hood, worn edge -->
+  <path d="M150,58 C180,64 193,92 187,120 C183,128 164,122 150,123 C136,122 117,128 113,120
+           C107,92 120,64 150,58 Z" fill="url(#cloakGrad)" stroke="#3a3a50" stroke-width="2"/>
+  <path d="M117,119 a6,6 0 1,0 12,0 a6,6 0 1,0 -12,0 M133,122 a6,6 0 1,0 12,0 a6,6 0 1,0 -12,0
+           M150,123 a6,6 0 1,0 12,0 a6,6 0 1,0 -12,0 M167,122 a6,6 0 1,0 12,0 a6,6 0 1,0 -12,0
+           M182,119 a6,6 0 1,0 12,0 a6,6 0 1,0 -12,0" fill="#26263a"/>
+
+  <path d="M150,74 C166,78 174,96 170,112 C166,122 134,122 130,112 C126,96 134,78 150,74 Z"
+        fill="#050507" opacity="0.94"/>
+  <path d="M138,100 L146,104" stroke="#6a3df5" stroke-width="2.5"/>
+  <path d="M162,100 L154,104" stroke="#6a3df5" stroke-width="2.5"/>
+
+  <ellipse cx="136" cy="274" rx="12" ry="6" fill="#050507" opacity="0.8"/>
+  <ellipse cx="164" cy="274" rx="12" ry="6" fill="#050507" opacity="0.8"/>
+</svg>

@@ -28,6 +28,9 @@ Game.Arena = (function () {
   let warlordBannerCallback = null;
   let revivedCallback = null;
 
+  const characterImages = {};
+  let spriteFacingLeft = false;
+
   function onHudUpdate(cb) { hudCallback = cb; }
   function onLevelUp(cb) { levelUpCallback = cb; }
   function onDeathPrompt(cb) { deathPromptCallback = cb; }
@@ -44,6 +47,17 @@ Game.Arena = (function () {
     ctx = canvas.getContext('2d');
     resize();
     window.addEventListener('resize', resize);
+    preloadCharacterImages();
+  }
+
+  // Preloaded once at boot, well before any Hunt can start, so drawPlayer() never
+  // has to deal with a mid-run loading race.
+  function preloadCharacterImages() {
+    Game.Player.CHARACTERS.forEach(function (c) {
+      const img = new Image();
+      img.src = c.image;
+      characterImages[c.id] = img;
+    });
   }
 
   function resize() {
@@ -544,28 +558,27 @@ Game.Arena = (function () {
 
     drawShadowEllipse(cx, cy + 15, 16, 6);
 
-    // Cloak: a soft shaded shape trailing behind the facing direction.
-    const cloakX = cx - Math.cos(angle) * 7;
-    const cloakY = cy - Math.sin(angle) * 7;
-    ctx.fillStyle = radialShade(cloakX, cloakY, 22, character.cloakColor, 0.25);
-    ctx.beginPath();
-    ctx.ellipse(cloakX, cloakY, 21, 23, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Body (sphere-shaded for a rounded, dimensional look instead of a flat disc)
-    ctx.fillStyle = radialShade(cx, cy, 16, character.bodyColor, 0.5);
-    ctx.beginPath();
-    ctx.arc(cx, cy, 16, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.strokeStyle = character.accentColor;
-    ctx.lineWidth = 2.5;
-    ctx.stroke();
-
-    // Head
-    ctx.fillStyle = radialShade(cx, cy - 17, 8, character.bodyColor, 0.5);
-    ctx.beginPath();
-    ctx.arc(cx, cy - 17, 8, 0, Math.PI * 2);
-    ctx.fill();
+    // Hand-illustrated sprite, drawn upright and only flipped horizontally to
+    // face left/right - rotating a full illustrated character through
+    // arbitrary angles looks broken, so only the blade below actually rotates
+    // to track the facing/attack direction.
+    if (Math.abs(facing.x) > 0.15) spriteFacingLeft = facing.x < 0;
+    const img = characterImages[character.id];
+    const spriteSize = 48;
+    if (img && img.complete && img.naturalWidth > 0) {
+      ctx.save();
+      ctx.translate(cx, cy - 6);
+      if (spriteFacingLeft) ctx.scale(-1, 1);
+      ctx.drawImage(img, -spriteSize / 2, -spriteSize / 2, spriteSize, spriteSize);
+      ctx.restore();
+    } else {
+      // Fallback in the unlikely event the sprite hasn't finished loading yet
+      // (preloaded at boot, so this should never really be hit in practice).
+      ctx.fillStyle = character.accentColor;
+      ctx.beginPath();
+      ctx.arc(cx, cy, 16, 0, Math.PI * 2);
+      ctx.fill();
+    }
 
     // Blade: tapered shape with a hilt, held toward whatever the hunter is
     // currently facing/auto-attacking. Long, thick and dark-outlined so it
