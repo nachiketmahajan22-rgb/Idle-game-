@@ -357,6 +357,10 @@ Game.Arena = (function () {
   }
 
   // ---- rendering ----
+  // Still plain Canvas 2D (no WebGL/3D engine, no image assets) - depth is faked
+  // with radial-gradient "sphere" shading, drop shadows, and a lightly textured
+  // terrain instead of flat single-color fills, which is what was reading as
+  // "just a dot" before.
 
   const ENEMY_COLORS = {
     riftWhelp: '#b3121f',
@@ -366,11 +370,83 @@ Game.Arena = (function () {
     abyssalWarlord: '#12121a'
   };
 
+  const ENEMY_SHAPES = {
+    riftWhelp: 'triangle',
+    ravenousCur: 'diamond',
+    boneStalker: 'square',
+    voidReaper: 'circle',
+    abyssalWarlord: 'hexagon'
+  };
+
+  const TERRAIN_CELL = 220;
+
   function worldToScreen(x, y, cx, cy) {
     return {
       x: (x - cx) + canvas.width / (2 * dpr),
       y: (y - cy) + canvas.height / (2 * dpr)
     };
+  }
+
+  // Deterministic pseudo-random in [0,1) from integer coords, so terrain
+  // decorations stay fixed in the world instead of re-rolling every frame.
+  function hash2D(x, y) {
+    const v = Math.sin(x * 127.1 + y * 311.7) * 43758.5453;
+    return v - Math.floor(v);
+  }
+
+  function lightenHex(hex, amount) {
+    const num = parseInt(hex.replace('#', ''), 16);
+    let r = (num >> 16) + Math.round(255 * amount);
+    let g = ((num >> 8) & 0xff) + Math.round(255 * amount);
+    let b = (num & 0xff) + Math.round(255 * amount);
+    r = Math.min(255, r); g = Math.min(255, g); b = Math.min(255, b);
+    return 'rgb(' + r + ',' + g + ',' + b + ')';
+  }
+
+  function radialShade(x, y, radius, baseColor, lightAmount) {
+    const grad = ctx.createRadialGradient(
+      x - radius * 0.35, y - radius * 0.35, radius * 0.1,
+      x, y, radius * 1.05
+    );
+    grad.addColorStop(0, lightenHex(baseColor, lightAmount !== undefined ? lightAmount : 0.35));
+    grad.addColorStop(1, baseColor);
+    return grad;
+  }
+
+  function drawShadowEllipse(x, y, rx, ry) {
+    ctx.fillStyle = 'rgba(0,0,0,0.4)';
+    ctx.beginPath();
+    ctx.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  function drawShapePath(shape, x, y, r) {
+    ctx.beginPath();
+    if (shape === 'triangle') {
+      ctx.moveTo(x, y - r);
+      ctx.lineTo(x + r * 0.87, y + r * 0.5);
+      ctx.lineTo(x - r * 0.87, y + r * 0.5);
+      ctx.closePath();
+    } else if (shape === 'diamond') {
+      ctx.moveTo(x, y - r);
+      ctx.lineTo(x + r, y);
+      ctx.lineTo(x, y + r);
+      ctx.lineTo(x - r, y);
+      ctx.closePath();
+    } else if (shape === 'square') {
+      const s = r * 0.85;
+      ctx.rect(x - s, y - s, s * 2, s * 2);
+    } else if (shape === 'hexagon') {
+      for (let i = 0; i < 6; i++) {
+        const a = (Math.PI / 3) * i - Math.PI / 2;
+        const px = x + r * Math.cos(a);
+        const py = y + r * Math.sin(a);
+        if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+      }
+      ctx.closePath();
+    } else {
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+    }
   }
 
   function draw() {
@@ -381,21 +457,68 @@ Game.Arena = (function () {
     const w = canvas.width / dpr;
     const h = canvas.height / dpr;
 
-    ctx.fillStyle = '#0a0a0f';
-    ctx.fillRect(0, 0, w, h);
-
+    drawGround(w, h);
+    drawTerrainFeatures(player.x, player.y, w, h);
     drawGrid(player.x, player.y, w, h);
     drawPickups(player.x, player.y, w, h);
     drawWeaponEffects(player.x, player.y);
     drawEnemies(player.x, player.y);
     drawPlayer(w, h, facing);
+    drawVignette(w, h);
 
     ctx.restore();
   }
 
+  function drawGround(w, h) {
+    const grad = ctx.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, Math.max(w, h) * 0.72);
+    grad.addColorStop(0, '#15151f');
+    grad.addColorStop(1, '#08080c');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, w, h);
+  }
+
+  function drawTerrainFeatures(cx, cy, w, h) {
+    const margin = 120;
+    const startCellX = Math.floor((cx - w / 2 - margin) / TERRAIN_CELL);
+    const endCellX = Math.floor((cx + w / 2 + margin) / TERRAIN_CELL);
+    const startCellY = Math.floor((cy - h / 2 - margin) / TERRAIN_CELL);
+    const endCellY = Math.floor((cy + h / 2 + margin) / TERRAIN_CELL);
+
+    for (let gx = startCellX; gx <= endCellX; gx++) {
+      for (let gy = startCellY; gy <= endCellY; gy++) {
+        const presence = hash2D(gx, gy);
+        if (presence > 0.4) continue;
+        const worldX = gx * TERRAIN_CELL + hash2D(gx + 0.5, gy) * TERRAIN_CELL;
+        const worldY = gy * TERRAIN_CELL + hash2D(gx, gy + 0.5) * TERRAIN_CELL;
+        const p = worldToScreen(worldX, worldY, cx, cy);
+        const variant = hash2D(gx + 0.25, gy + 0.25);
+
+        if (variant < 0.5) {
+          ctx.fillStyle = 'rgba(42,42,53,0.5)';
+          ctx.beginPath();
+          ctx.ellipse(p.x, p.y, 15, 8, variant * Math.PI, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = 'rgba(65,65,78,0.4)';
+          ctx.beginPath();
+          ctx.ellipse(p.x - 4, p.y - 3, 6, 4, 0, 0, Math.PI * 2);
+          ctx.fill();
+        } else {
+          ctx.strokeStyle = 'rgba(179,18,31,0.22)';
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.moveTo(p.x - 11, p.y);
+          ctx.lineTo(p.x - 3, p.y + 4);
+          ctx.lineTo(p.x + 4, p.y - 3);
+          ctx.lineTo(p.x + 12, p.y + 2);
+          ctx.stroke();
+        }
+      }
+    }
+  }
+
   function drawGrid(cx, cy, w, h) {
     const step = 120;
-    ctx.strokeStyle = '#2a2a35';
+    ctx.strokeStyle = 'rgba(42,42,53,0.35)';
     ctx.lineWidth = 1;
     const offsetX = ((w / 2 - cx) % step + step) % step;
     const offsetY = ((h / 2 - cy) % step + step) % step;
@@ -405,34 +528,64 @@ Game.Arena = (function () {
     ctx.stroke();
   }
 
+  function drawVignette(w, h) {
+    const grad = ctx.createRadialGradient(w / 2, h / 2, Math.min(w, h) * 0.25, w / 2, h / 2, Math.max(w, h) * 0.75);
+    grad.addColorStop(0, 'rgba(10,10,15,0)');
+    grad.addColorStop(1, 'rgba(0,0,0,0.55)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, w, h);
+  }
+
   function drawPlayer(w, h, facing) {
     const character = Game.Player.getSelectedCharacter();
     const angle = Math.atan2(facing.y, facing.x);
     const cx = w / 2;
     const cy = h / 2;
 
-    // Cloak: a soft shape trailing behind the facing direction, gives the flat
-    // circle a silhouette instead of reading as a plain dot.
-    ctx.fillStyle = character.cloakColor;
+    drawShadowEllipse(cx, cy + 15, 16, 6);
+
+    // Cloak: a soft shaded shape trailing behind the facing direction.
+    const cloakX = cx - Math.cos(angle) * 7;
+    const cloakY = cy - Math.sin(angle) * 7;
+    ctx.fillStyle = radialShade(cloakX, cloakY, 22, character.cloakColor, 0.25);
     ctx.beginPath();
-    ctx.ellipse(cx - Math.cos(angle) * 7, cy - Math.sin(angle) * 7, 21, 21, 0, 0, Math.PI * 2);
+    ctx.ellipse(cloakX, cloakY, 21, 23, 0, 0, Math.PI * 2);
     ctx.fill();
 
-    // Body
-    ctx.fillStyle = character.bodyColor;
-    ctx.strokeStyle = character.accentColor;
-    ctx.lineWidth = 2.5;
+    // Body (sphere-shaded for a rounded, dimensional look instead of a flat disc)
+    ctx.fillStyle = radialShade(cx, cy, 16, character.bodyColor, 0.5);
     ctx.beginPath();
     ctx.arc(cx, cy, 16, 0, Math.PI * 2);
     ctx.fill();
+    ctx.strokeStyle = character.accentColor;
+    ctx.lineWidth = 2.5;
     ctx.stroke();
 
-    // Blade held toward whatever the hunter is currently facing/attacking.
+    // Head
+    ctx.fillStyle = radialShade(cx, cy - 17, 8, character.bodyColor, 0.5);
+    ctx.beginPath();
+    ctx.arc(cx, cy - 17, 8, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Blade: tapered shape with a hilt, held toward whatever the hunter is
+    // currently facing/auto-attacking.
     ctx.save();
     ctx.translate(cx, cy);
     ctx.rotate(angle);
-    ctx.fillStyle = character.accentColor;
-    ctx.fillRect(9, -2, 17, 4);
+    const bladeGrad = ctx.createLinearGradient(6, 0, 27, 0);
+    bladeGrad.addColorStop(0, character.accentColor);
+    bladeGrad.addColorStop(1, lightenHex(character.accentColor, 0.4));
+    ctx.fillStyle = bladeGrad;
+    ctx.beginPath();
+    ctx.moveTo(6, -3);
+    ctx.lineTo(22, -1.5);
+    ctx.lineTo(27, 0);
+    ctx.lineTo(22, 1.5);
+    ctx.lineTo(6, 3);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#5a4632';
+    ctx.fillRect(-3, -2.5, 9, 5);
     ctx.restore();
   }
 
@@ -442,10 +595,17 @@ Game.Arena = (function () {
     Game.Enemies.getActive().forEach(function (enemy) {
       const p = worldToScreen(enemy.x, enemy.y, cx, cy);
       if (p.x < -60 || p.x > w + 60 || p.y < -60 || p.y > h + 60) return;
-      ctx.fillStyle = ENEMY_COLORS[enemy.defId] || '#b3121f';
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, enemy.radius, 0, Math.PI * 2);
+      const color = ENEMY_COLORS[enemy.defId] || '#b3121f';
+      const shape = ENEMY_SHAPES[enemy.defId] || 'circle';
+
+      drawShadowEllipse(p.x, p.y + enemy.radius * 0.55, enemy.radius * 0.9, enemy.radius * 0.32);
+
+      drawShapePath(shape, p.x, p.y, enemy.radius);
+      ctx.fillStyle = radialShade(p.x, p.y, enemy.radius, color, 0.3);
       ctx.fill();
+      ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
 
       if (enemy.maxHp > 200) {
         const barW = enemy.radius * 2;
@@ -458,19 +618,41 @@ Game.Arena = (function () {
   }
 
   function drawPickups(cx, cy, w, h) {
+    const pulse = 0.7 + 0.3 * Math.sin(Date.now() / 200);
+
     Game.Pickups.getGems().forEach(function (gem) {
       const p = worldToScreen(gem.x, gem.y, cx, cy);
       if (p.x < 0 || p.x > w || p.y < 0 || p.y > h) return;
-      ctx.fillStyle = gem.tier === 'large' ? '#ffd23f' : (gem.tier === 'medium' ? '#ffd23f' : '#ff2b4d');
+      const color = gem.tier === 'small' ? '#ff2b4d' : '#ffd23f';
       const r = gem.tier === 'large' ? 7 : (gem.tier === 'medium' ? 5 : 4);
+
+      ctx.save();
+      ctx.globalAlpha = 0.3 * pulse;
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, r * 2.2, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+      ctx.fillStyle = radialShade(p.x, p.y, r, color, 0.5);
       ctx.beginPath();
       ctx.arc(p.x, p.y, r, 0, Math.PI * 2);
       ctx.fill();
     });
+
     Game.Pickups.getShards().forEach(function (shard) {
       const p = worldToScreen(shard.x, shard.y, cx, cy);
       if (p.x < 0 || p.x > w || p.y < 0 || p.y > h) return;
+
+      ctx.save();
+      ctx.globalAlpha = 0.3 * pulse;
       ctx.fillStyle = '#ffd23f';
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 16, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+      ctx.fillStyle = radialShade(p.x, p.y, 8, '#ffd23f', 0.5);
       ctx.beginPath();
       ctx.arc(p.x, p.y, 8, 0, Math.PI * 2);
       ctx.fill();
@@ -496,7 +678,8 @@ Game.Arena = (function () {
     });
     Game.Weapons.getHoundPositions(Game.Player.get()).forEach(function (hp) {
       const p = worldToScreen(hp.x, hp.y, cx, cy);
-      ctx.fillStyle = '#8a6d4a';
+      drawShadowEllipse(p.x, p.y + 6, 9, 3);
+      ctx.fillStyle = radialShade(p.x, p.y, 10, '#8a6d4a', 0.35);
       ctx.beginPath();
       ctx.arc(p.x, p.y, 10, 0, Math.PI * 2);
       ctx.fill();
