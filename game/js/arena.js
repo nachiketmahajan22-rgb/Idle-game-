@@ -568,24 +568,33 @@ Game.Arena = (function () {
     ctx.fill();
 
     // Blade: tapered shape with a hilt, held toward whatever the hunter is
-    // currently facing/auto-attacking.
+    // currently facing/auto-attacking. Long, thick and dark-outlined so it
+    // reads clearly even at the character's small on-screen size, not just
+    // when zoomed in.
     ctx.save();
     ctx.translate(cx, cy);
     ctx.rotate(angle);
-    const bladeGrad = ctx.createLinearGradient(6, 0, 27, 0);
+
+    ctx.strokeStyle = 'rgba(0,0,0,0.65)';
+    ctx.lineWidth = 1.5;
+
+    const bladeGrad = ctx.createLinearGradient(10, 0, 42, 0);
     bladeGrad.addColorStop(0, character.accentColor);
-    bladeGrad.addColorStop(1, lightenHex(character.accentColor, 0.4));
+    bladeGrad.addColorStop(1, '#ffffff');
     ctx.fillStyle = bladeGrad;
     ctx.beginPath();
-    ctx.moveTo(6, -3);
-    ctx.lineTo(22, -1.5);
-    ctx.lineTo(27, 0);
-    ctx.lineTo(22, 1.5);
-    ctx.lineTo(6, 3);
+    ctx.moveTo(10, -4.5);
+    ctx.lineTo(32, -2);
+    ctx.lineTo(42, 0);
+    ctx.lineTo(32, 2);
+    ctx.lineTo(10, 4.5);
     ctx.closePath();
     ctx.fill();
+    ctx.stroke();
+
     ctx.fillStyle = '#5a4632';
-    ctx.fillRect(-3, -2.5, 9, 5);
+    ctx.fillRect(-4, -3.5, 12, 7);
+    ctx.strokeRect(-4, -3.5, 12, 7);
     ctx.restore();
   }
 
