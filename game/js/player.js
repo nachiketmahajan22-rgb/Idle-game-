@@ -25,7 +25,7 @@ Game.Player = (function () {
   // held blade's color and the Camp selection UI's highlight.
   const CHARACTERS = [
     { id: 'bladeHunter', name: 'Shivaji Maharaj',     icon: '👑', image: 'assets/characters/bladeHunter.png', accentColor: '#ff8c1a' },
-    { id: 'shadowRogue',  name: 'Tanaji Malusare',     icon: '🦁', image: 'assets/characters/shadowRogue.png', accentColor: '#3a7d44' },
+    { id: 'shadowRogue',  name: 'Tanaji Malusare',     icon: '🦁', image: 'assets/characters/shadowRogue.png', accentColor: '#d1481f' },
     { id: 'ironWarden',   name: 'Bajiprabhu Deshpande', icon: '🛡', image: 'assets/characters/ironWarden.png', accentColor: '#4a6fa5' },
     { id: 'emberWitch',   name: 'Netaji Palkar',       icon: '🐎', image: 'assets/characters/emberWitch.png', accentColor: '#c9a227' }
   ];

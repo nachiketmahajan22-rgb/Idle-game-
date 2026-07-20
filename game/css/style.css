@@ -134,7 +134,17 @@ html, body {
   color: var(--text-primary);
 }
 
-.character-icon { font-size: 1.4rem; }
+.character-portrait {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,255,255,0.05), transparent 70%);
+  border: 2px solid var(--border);
+}
+
+.character-btn.selected .character-portrait {
+  border-color: var(--char-color, var(--neon-crimson));
+}
 
 .character-name {
   font-size: 0.62rem;

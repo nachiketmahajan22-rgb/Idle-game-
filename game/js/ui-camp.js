@@ -58,7 +58,7 @@ Game.UICamp = (function () {
     els.characterSelect.innerHTML = Game.Player.CHARACTERS.map(function (c) {
       return '' +
         '<button class="character-btn" data-character="' + c.id + '" style="--char-color:' + c.accentColor + '">' +
-          '<span class="character-icon">' + c.icon + '</span>' +
+          '<img class="character-portrait" src="' + c.image + '" alt="">' +
           '<span class="character-name">' + c.name + '</span>' +
         '</button>';
     }).join('');

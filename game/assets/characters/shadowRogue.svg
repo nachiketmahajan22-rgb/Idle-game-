@@ -1,48 +1,80 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300">
   <defs>
     <radialGradient id="cloakGrad" cx="30%" cy="15%" r="90%">
-      <stop offset="0%" stop-color="#4f9459"/>
-      <stop offset="100%" stop-color="#255c2c"/>
+      <stop offset="0%" stop-color="#e0492a"/>
+      <stop offset="100%" stop-color="#8a1f10"/>
     </radialGradient>
     <radialGradient id="bodyGrad" cx="30%" cy="15%" r="90%">
       <stop offset="0%" stop-color="#e8ddc4"/>
       <stop offset="100%" stop-color="#c4b790"/>
     </radialGradient>
     <radialGradient id="turbanGrad" cx="30%" cy="15%" r="90%">
-      <stop offset="0%" stop-color="#5fa868"/>
-      <stop offset="100%" stop-color="#2f6e37"/>
+      <stop offset="0%" stop-color="#eb5f3a"/>
+      <stop offset="100%" stop-color="#a3260f"/>
     </radialGradient>
+    <radialGradient id="skinGrad" cx="35%" cy="25%" r="85%">
+      <stop offset="0%" stop-color="#d6a06a"/>
+      <stop offset="100%" stop-color="#a86f42"/>
+    </radialGradient>
+    <linearGradient id="bladeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fff8ea"/>
+      <stop offset="55%" stop-color="#e4d9b8"/>
+      <stop offset="100%" stop-color="#9c8b5e"/>
+    </linearGradient>
     <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
       <feGaussianBlur stdDeviation="9" result="blur"/>
       <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
     </filter>
   </defs>
 
-  <ellipse cx="150" cy="170" rx="105" ry="112" fill="none" stroke="#3a7d44" stroke-width="3" opacity="0.3" filter="url(#glow)"/>
+  <ellipse cx="150" cy="170" rx="120" ry="122" fill="none" stroke="#d1481f" stroke-width="3" opacity="0.3" filter="url(#glow)"/>
 
-  <path d="M114,134 C76,162 58,216 70,268 C92,296 208,296 230,268 C242,216 224,162 186,134
-           C180,154 120,154 114,134 Z" fill="url(#cloakGrad)"/>
-  <path d="M114,134 C94,178 92,230 102,270" fill="none" stroke="#000" stroke-opacity="0.25" stroke-width="3"/>
-  <path d="M186,134 C206,178 208,230 198,270" fill="none" stroke="#000" stroke-opacity="0.25" stroke-width="3"/>
+  <path d="M108,140 C78,158 66,206 74,240 L94,236 C90,204 96,168 118,146 Z" fill="url(#cloakGrad)" stroke="#6a1a0c" stroke-width="2"/>
+  <path d="M192,140 C222,158 234,206 226,240 L206,236 C210,204 204,168 182,146 Z" fill="url(#cloakGrad)" stroke="#6a1a0c" stroke-width="2"/>
 
-  <path d="M150,144 L172,164 L166,244 L150,258 L134,244 L128,164 Z" fill="url(#bodyGrad)" stroke="#5c4a28" stroke-width="2.5"/>
-  <path d="M150,152 C157,170 159,206 153,240 L150,246 L147,240 C141,206 141,170 150,152 Z" fill="#2f6e37" opacity="0.7"/>
-  <rect x="128" y="210" width="44" height="11" rx="3" fill="#5c3a1a"/>
+  <!-- back/raised sword arm -->
+  <path d="M104,148 C82,158 62,168 48,178 C40,184 38,196 44,204 C52,210 62,206 68,198 C80,186 96,168 112,156 Z"
+        fill="url(#bodyGrad)" stroke="#5c4a28" stroke-width="2.5"/>
+  <g transform="translate(46,200) rotate(-52)">
+    <rect x="-7" y="-6" width="14" height="20" rx="3" fill="#3a2a14" stroke="#1a1008" stroke-width="1.5"/>
+    <rect x="-16" y="10" width="32" height="7" rx="2" fill="#9c8468" stroke="#3a2a14" stroke-width="1.5"/>
+    <path d="M-5,17 L5,17 L3,108 L0,120 L-3,108 Z" fill="url(#bladeGrad)" stroke="#3a3220" stroke-width="2"/>
+  </g>
 
-  <!-- Maratha war belt with a sheathed talwar at the hip -->
-  <path d="M120,196 L106,236 L120,242 L134,202 Z" fill="#8a8a7a" opacity="0.9"/>
-  <rect x="112" y="188" width="10" height="12" fill="#5c3a1a"/>
+  <!-- off-hand resting near a sheathed backup blade at the hip -->
+  <path d="M196,148 C216,160 228,178 230,198 C230,208 222,214 213,210 C207,204 204,190 198,176 C193,166 190,156 188,148 Z"
+        fill="url(#bodyGrad)" stroke="#5c4a28" stroke-width="2.5"/>
+  <path d="M198,196 L182,236 L196,242 L212,202 Z" fill="#8a8a7a" opacity="0.9" stroke="#3a2a14" stroke-width="1.5"/>
+  <rect x="190" y="188" width="10" height="12" fill="#3a2a14"/>
+
+  <!-- legs -->
+  <path d="M126,206 C118,232 114,256 118,278 L140,278 C142,254 144,228 144,206 Z" fill="url(#bodyGrad)" stroke="#5c4a28" stroke-width="2.5"/>
+  <path d="M174,206 C182,232 187,256 184,278 L162,278 C160,254 158,228 158,206 Z" fill="url(#bodyGrad)" stroke="#5c4a28" stroke-width="2.5"/>
+  <ellipse cx="127" cy="282" rx="15" ry="7" fill="#3a1a10"/>
+  <ellipse cx="175" cy="282" rx="15" ry="7" fill="#3a1a10"/>
+
+  <!-- angarkha tunic -->
+  <path d="M150,144 L182,164 L172,214 L150,226 L128,214 L118,164 Z" fill="url(#bodyGrad)" stroke="#5c4a28" stroke-width="2.5"/>
+  <path d="M150,152 C160,172 162,198 155,220 L150,224 L145,220 C138,198 140,172 150,152 Z" fill="#a3260f" opacity="0.7"/>
+  <rect x="122" y="196" width="56" height="13" rx="3" fill="#5c3a1a"/>
+  <circle cx="150" cy="202" r="6" fill="#eb8a5a" opacity="0.9"/>
+
+  <rect x="138" y="118" width="24" height="20" rx="6" fill="url(#skinGrad)"/>
 
   <!-- simpler soldier's pagadi, no jewel ornament - a field commander, not royalty -->
-  <path d="M150,58 C186,60 200,92 194,120 C190,134 110,134 106,120 C100,92 114,60 150,58 Z"
-        fill="url(#turbanGrad)" stroke="#1e4a23" stroke-width="2"/>
-  <path d="M114,82 C132,75 168,75 186,82" fill="none" stroke="#1e4a23" stroke-width="2" opacity="0.6"/>
-  <path d="M110,100 C130,93 170,93 190,100" fill="none" stroke="#1e4a23" stroke-width="2" opacity="0.6"/>
-  <path d="M107,114 C128,109 172,109 193,114" fill="none" stroke="#1e4a23" stroke-width="2" opacity="0.6"/>
+  <path d="M150,32 C192,34 208,68 202,100 C198,116 102,116 98,100 C92,68 108,34 150,32 Z"
+        fill="url(#turbanGrad)" stroke="#6a1a0c" stroke-width="2"/>
+  <path d="M110,58 C130,50 170,50 190,58" fill="none" stroke="#6a1a0c" stroke-width="2" opacity="0.6"/>
+  <path d="M106,76 C128,68 172,68 194,76" fill="none" stroke="#6a1a0c" stroke-width="2" opacity="0.6"/>
+  <path d="M103,92 C126,86 174,86 197,92" fill="none" stroke="#6a1a0c" stroke-width="2" opacity="0.6"/>
 
-  <ellipse cx="150" cy="122" rx="23" ry="19" fill="#2a1c10" opacity="0.9"/>
-  <path d="M137,129 C143,135 157,135 163,129" fill="none" stroke="#140c06" stroke-width="3" opacity="0.85"/>
-
-  <ellipse cx="136" cy="274" rx="12" ry="6" fill="#1e2c1e" opacity="0.8"/>
-  <ellipse cx="164" cy="274" rx="12" ry="6" fill="#1e2c1e" opacity="0.8"/>
+  <!-- face -->
+  <ellipse cx="150" cy="106" rx="30" ry="28" fill="url(#skinGrad)" stroke="#6a4626" stroke-width="1.5"/>
+  <path d="M126,98 C132,92 142,90 150,92" fill="none" stroke="#2a1a0c" stroke-width="3" stroke-linecap="round"/>
+  <path d="M174,98 C168,92 158,90 150,92" fill="none" stroke="#2a1a0c" stroke-width="3" stroke-linecap="round"/>
+  <ellipse cx="138" cy="104" rx="3.4" ry="4.6" fill="#1a0f08"/>
+  <ellipse cx="162" cy="104" rx="3.4" ry="4.6" fill="#1a0f08"/>
+  <path d="M150,106 L147,118 C147,121 150,123 153,120" fill="none" stroke="#7a5636" stroke-width="2" stroke-linecap="round"/>
+  <path d="M128,124 C136,132 144,134 150,134 C156,134 164,132 172,124 C166,120 160,126 150,126 C140,126 134,120 128,124 Z" fill="#1a1208"/>
+  <path d="M144,133 C147,136 153,136 156,133" fill="none" stroke="#3a2410" stroke-width="1.6" stroke-linecap="round" opacity="0.7"/>
 </svg>
