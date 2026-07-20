@@ -181,11 +181,21 @@ Game.Enemies = (function () {
       for (let i = 0; i < 5; i++) {
         Game.Pickups.spawnShard(enemy.x + (Math.random() - 0.5) * 30, enemy.y + (Math.random() - 0.5) * 30);
       }
+      // The boss fight is the hardest moment in a campaign - guarantee a
+      // strong comeback reward rather than leaving it to drop chance.
+      Game.Pickups.spawnHeart(enemy.x - 20, enemy.y);
+      Game.Pickups.spawnPowerOrb(enemy.x + 20, enemy.y);
+      Game.Pickups.spawnPowerOrb(enemy.x, enemy.y + 20);
     } else if (enemy.defId === 'voidReaper') {
       const count = Math.random() < 0.5 ? 1 : 2;
       for (let i = 0; i < count; i++) {
         Game.Pickups.spawnShard(enemy.x + (Math.random() - 0.5) * 20, enemy.y + (Math.random() - 0.5) * 20);
       }
+      // The mounted Sardar is the recurring "tough fight" milestone of a
+      // campaign - always drop a heart (health) and a power orb (instant
+      // weapon level) so surviving it actually pays off.
+      Game.Pickups.spawnHeart(enemy.x - 15, enemy.y);
+      Game.Pickups.spawnPowerOrb(enemy.x + 15, enemy.y);
     } else {
       const chance = def.essenceDropChance + Game.Player.essenceDropBonus();
       if (Math.random() < chance) Game.Pickups.spawnShard(enemy.x, enemy.y);

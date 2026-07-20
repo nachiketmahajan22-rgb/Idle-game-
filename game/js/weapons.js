@@ -11,10 +11,13 @@ Game.Weapons = (function () {
       // actually shown on screen - it also means kiting away from a fast
       // pursuer (e.g. the Adilshahi Skirmisher) no longer makes every swing
       // whiff just because the movement-facing points the other way.
+      // Levels also add extra orbiting blades (bladeCountLevels) - each one
+      // is a full additional hit per swing, drawn as an extra spinning
+      // blade in arena.js so the power growth is visible, not just numeric.
       name: 'Talwar Strike', kind: 'meleeArc', icon: '⚔',
       baseDamage: 12, damageGrowth: 1.15,
       baseCooldown: 0.90, cooldownMult: 0.96, minCooldown: 0.5,
-      range: 90, baseArc: 360, arcBonusLevels: [5, 8], arcBonusDeg: 15
+      range: 90, baseArc: 360, bladeCountLevels: [3, 5, 7], maxBladeCount: 4
     },
     shadowBlade: {
       name: 'Wagh Nakh Throw', kind: 'homingProjectile', icon: '🐾',
@@ -68,8 +71,11 @@ Game.Weapons = (function () {
     return bonus;
   }
 
-  function arcAt(level) {
-    return DEFS.bladeAcolyte.baseArc + steppedBonus(level, DEFS.bladeAcolyte.arcBonusLevels, DEFS.bladeAcolyte.arcBonusDeg);
+  function bladeCountAt(level) {
+    const def = DEFS.bladeAcolyte;
+    let count = 1;
+    def.bladeCountLevels.forEach(function (lvl) { if (level >= lvl) count += 1; });
+    return Math.min(def.maxBladeCount, count);
   }
 
   function pierceAt(level) {
@@ -140,6 +146,16 @@ Game.Weapons = (function () {
     return true;
   }
 
+  // Used by the power-orb pickup dropped by elite/boss kills: an instant,
+  // free weapon level rather than waiting for the next XP level-up card.
+  function levelUpRandomEquipped() {
+    const eligible = equipped.filter(function (w) { return w.level < 8; });
+    if (eligible.length === 0) return null;
+    const w = eligible[Math.floor(Math.random() * eligible.length)];
+    w.level += 1;
+    return w.id;
+  }
+
   function initRuntimeFor(id) {
     if (id === 'riftTurret') {
       runtime.riftTurret = { turrets: [], redeployTimer: 0 };
@@ -163,7 +179,7 @@ Game.Weapons = (function () {
     projectiles.push({ x: x, y: y, dirX: dirX, dirY: dirY, speed: speed, damage: damage, pierce: pierce, age: 0, lifetime: lifetime });
   }
 
-  function updateMeleeArc(dt, now, playerPos, facing) {
+  function updateMeleeArc(dt, now, playerPos) {
     const rt = runtime.bladeAcolyte;
     const w = get('bladeAcolyte');
     if (!w) return;
@@ -172,17 +188,12 @@ Game.Weapons = (function () {
     rt.cooldown = cooldownAt('bladeAcolyte', w.level) * Game.Player.cooldownMultiplier();
 
     const range = DEFS.bladeAcolyte.range;
-    const halfArcRad = (arcAt(w.level) / 2) * (Math.PI / 180);
-    const facingAngle = Math.atan2(facing.y, facing.x);
-    const dmg = damageAt('bladeAcolyte', w.level) * Game.Player.damageMultiplier();
+    const dmg = damageAt('bladeAcolyte', w.level) * Game.Player.damageMultiplier() * bladeCountAt(w.level);
 
     Game.Enemies.getActive().forEach(function (enemy) {
       const d = Game.Utils.distance(playerPos.x, playerPos.y, enemy.x, enemy.y);
       if (d > range + enemy.radius) return;
-      const toEnemy = Math.atan2(enemy.y - playerPos.y, enemy.x - playerPos.x);
-      let diff = Math.abs(toEnemy - facingAngle);
-      if (diff > Math.PI) diff = 2 * Math.PI - diff;
-      if (diff <= halfArcRad) Game.Enemies.applyDamage(enemy, dmg);
+      Game.Enemies.applyDamage(enemy, dmg);
     });
   }
 
@@ -319,8 +330,8 @@ Game.Weapons = (function () {
     });
   }
 
-  function update(dt, now, playerPos, facing) {
-    if (hasEquipped('bladeAcolyte')) updateMeleeArc(dt, now, playerPos, facing);
+  function update(dt, now, playerPos) {
+    if (hasEquipped('bladeAcolyte')) updateMeleeArc(dt, now, playerPos);
     if (hasEquipped('shadowBlade')) updateHomingProjectileWeapon(dt, now, playerPos);
     if (hasEquipped('riftTurret')) updateTurret(dt, now, playerPos);
     if (hasEquipped('bloodHoundPack')) updateOrbit(dt, now, playerPos);
@@ -363,9 +374,11 @@ Game.Weapons = (function () {
     MAX_EQUIPPED: MAX_EQUIPPED,
     damageAt: damageAt,
     cooldownAt: cooldownAt,
-    arcAt: arcAt,
+    bladeCountAt: bladeCountAt,
     pierceAt: pierceAt,
+    shadowBladeCountAt: shadowBladeCountAt,
     turretRangeAt: turretRangeAt,
+    turretCountAt: turretCountAt,
     houndCountAt: houndCountAt,
     cathedralRadiusAt: cathedralRadiusAt,
     get: get,
@@ -375,6 +388,7 @@ Game.Weapons = (function () {
     canEquipMore: canEquipMore,
     addWeapon: addWeapon,
     levelUp: levelUp,
+    levelUpRandomEquipped: levelUpRandomEquipped,
     startRun: startRun,
     update: update,
     getProjectiles: getProjectiles,

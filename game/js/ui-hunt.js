@@ -27,8 +27,22 @@ Game.UIHunt = (function () {
       resultsModal: document.getElementById('results-modal'),
       resultsStats: document.getElementById('results-stats'),
       resultsDoubleBtn: document.getElementById('results-double-btn'),
-      resultsReturnBtn: document.getElementById('results-return-btn')
+      resultsReturnBtn: document.getElementById('results-return-btn'),
+
+      toast: document.getElementById('achievement-toast')
     };
+  }
+
+  // Shares the same fixed-position toast element the Camp screen uses for
+  // achievement unlocks - it's positioned globally, not scoped to one screen.
+  function showToast(text) {
+    const t = els.toast;
+    t.textContent = text;
+    t.classList.remove('hidden');
+    t.style.animation = 'none';
+    void t.offsetWidth;
+    t.style.animation = '';
+    window.setTimeout(function () { t.classList.add('hidden'); }, 3000);
   }
 
   function cardLabel(card) {
@@ -39,7 +53,31 @@ Game.UIHunt = (function () {
     if (card.type === 'levelUp') {
       const w = Game.Weapons.get(card.id);
       const def = Game.Weapons.DEFS[card.id];
-      return { icon: def.icon, title: def.name, desc: 'Level ' + w.level + ' → ' + (w.level + 1) };
+      const next = w.level + 1;
+      const dmgPct = Math.round((Game.Weapons.damageAt(card.id, next) / Game.Weapons.damageAt(card.id, w.level) - 1) * 100);
+      const bits = ['+' + dmgPct + '% dmg'];
+
+      if (card.id === 'bladeAcolyte') {
+        const countNow = Game.Weapons.bladeCountAt(w.level);
+        const countNext = Game.Weapons.bladeCountAt(next);
+        if (countNext > countNow) bits.unshift('+1 blade (' + countNext + ' total)');
+      } else if (card.id === 'shadowBlade') {
+        const pierceNow = Game.Weapons.pierceAt(w.level);
+        const pierceNext = Game.Weapons.pierceAt(next);
+        if (pierceNext > pierceNow) bits.push('+' + (pierceNext - pierceNow) + ' pierce');
+        if (Game.Weapons.shadowBladeCountAt(next) > Game.Weapons.shadowBladeCountAt(w.level)) bits.unshift('+1 dagger thrown');
+      } else if (card.id === 'riftTurret') {
+        if (Game.Weapons.turretCountAt(next) > Game.Weapons.turretCountAt(w.level)) bits.unshift('+1 tower');
+        const rangeNow = Game.Weapons.turretRangeAt(w.level);
+        const rangeNext = Game.Weapons.turretRangeAt(next);
+        if (rangeNext > rangeNow) bits.push('+range');
+      } else if (card.id === 'bloodHoundPack') {
+        if (Game.Weapons.houndCountAt(next) > Game.Weapons.houndCountAt(w.level)) bits.unshift('+1 Mavla');
+      } else if (card.id === 'cursedCathedral') {
+        if (Game.Weapons.cathedralRadiusAt(next) > Game.Weapons.cathedralRadiusAt(w.level)) bits.push('+radius');
+      }
+
+      return { icon: def.icon, title: def.name + ' Lv ' + next, desc: bits.join(' · ') };
     }
     if (card.type === 'passive') {
       const info = Game.Player.PASSIVE_INFO[card.id];
@@ -78,6 +116,7 @@ Game.UIHunt = (function () {
     Game.Arena.onResults(showResults);
     Game.Arena.onWarlordBanner(showWarlordBanner);
     Game.Arena.onRevived(hideDeathModal);
+    Game.Arena.onNotify(showToast);
   }
 
   function updateHud(data) {

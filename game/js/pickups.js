@@ -5,13 +5,18 @@ Game.Pickups = (function () {
   const MAGNET_SPEED = 500;
   const COLLECT_RADIUS = 20;
   const SHARD_ESSENCE_VALUE = 3;
+  const HEART_HEAL_AMOUNT = 30;
 
   let gems = [];
   let shards = [];
+  let hearts = [];
+  let powerOrbs = [];
 
   function startRun() {
     gems = [];
     shards = [];
+    hearts = [];
+    powerOrbs = [];
   }
 
   function pushCapped(list, entry) {
@@ -31,6 +36,17 @@ Game.Pickups = (function () {
 
   function spawnShard(x, y) {
     pushCapped(shards, { x: x, y: y });
+  }
+
+  // Dropped by elite/boss kills (Mughal Sardar, Siege Commander) - a
+  // guaranteed comeback moment after the harder fights, rather than relying
+  // only on the rare grunt essence-shard drop chance.
+  function spawnHeart(x, y) {
+    pushCapped(hearts, { x: x, y: y });
+  }
+
+  function spawnPowerOrb(x, y) {
+    pushCapped(powerOrbs, { x: x, y: y });
   }
 
   function updateList(list, dt, playerPos, pickupRadius) {
@@ -59,11 +75,19 @@ Game.Pickups = (function () {
     const shardResult = updateList(shards, dt, playerPos, pickupRadius);
     shards = shardResult.remaining;
 
+    const heartResult = updateList(hearts, dt, playerPos, pickupRadius);
+    hearts = heartResult.remaining;
+
+    const powerResult = updateList(powerOrbs, dt, playerPos, pickupRadius);
+    powerOrbs = powerResult.remaining;
+
     return {
       xpGained: gemResult.collectedValue,
       gemsCollected: gemResult.collectedCount,
       essenceGained: shardResult.collectedCount * SHARD_ESSENCE_VALUE,
-      shardsCollected: shardResult.collectedCount
+      shardsCollected: shardResult.collectedCount,
+      heartsCollected: heartResult.collectedCount,
+      powerOrbsCollected: powerResult.collectedCount
     };
   }
 
@@ -75,13 +99,26 @@ Game.Pickups = (function () {
     return shards;
   }
 
+  function getHearts() {
+    return hearts;
+  }
+
+  function getPowerOrbs() {
+    return powerOrbs;
+  }
+
   return {
     SHARD_ESSENCE_VALUE: SHARD_ESSENCE_VALUE,
+    HEART_HEAL_AMOUNT: HEART_HEAL_AMOUNT,
     startRun: startRun,
     spawnGem: spawnGem,
     spawnShard: spawnShard,
+    spawnHeart: spawnHeart,
+    spawnPowerOrb: spawnPowerOrb,
     update: update,
     getGems: getGems,
-    getShards: getShards
+    getShards: getShards,
+    getHearts: getHearts,
+    getPowerOrbs: getPowerOrbs
   };
 })();

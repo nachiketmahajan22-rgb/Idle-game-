@@ -28,6 +28,7 @@ Game.Arena = (function () {
   let resultsCallback = null;
   let warlordBannerCallback = null;
   let revivedCallback = null;
+  let notifyCallback = null;
 
   const characterImages = {};
   let spriteFacingLeft = false;
@@ -38,6 +39,7 @@ Game.Arena = (function () {
   function onResults(cb) { resultsCallback = cb; }
   function onWarlordBanner(cb) { warlordBannerCallback = cb; }
   function onRevived(cb) { revivedCallback = cb; }
+  function onNotify(cb) { notifyCallback = cb; }
 
   function xpToNext(level) {
     return Math.round(25 * Math.pow(level, 1.4));
@@ -182,12 +184,23 @@ Game.Arena = (function () {
     }
 
     Game.Enemies.update(dt, now, run.elapsed, player);
-    Game.Weapons.update(dt, now, player, facing);
+    Game.Weapons.update(dt, now, player);
 
     const pickupResult = Game.Pickups.update(dt, now, player, Game.Player.pickupRadius());
     run.xp += pickupResult.xpGained;
     run.gemsCollected += pickupResult.gemsCollected;
     run.shardsCollected += pickupResult.shardsCollected;
+
+    if (pickupResult.heartsCollected > 0) {
+      Game.Player.heal(Game.Pickups.HEART_HEAL_AMOUNT * pickupResult.heartsCollected);
+      if (notifyCallback) notifyCallback('+' + (Game.Pickups.HEART_HEAL_AMOUNT * pickupResult.heartsCollected) + ' HP restored');
+    }
+    for (let i = 0; i < pickupResult.powerOrbsCollected; i++) {
+      const leveledId = Game.Weapons.levelUpRandomEquipped();
+      if (leveledId && notifyCallback) {
+        notifyCallback(Game.Weapons.DEFS[leveledId].name + ' surged to Lv ' + Game.Weapons.get(leveledId).level + '!');
+      }
+    }
 
     while (run.xp >= xpToNext(run.level)) {
       run.xp -= xpToNext(run.level);
@@ -576,35 +589,41 @@ Game.Arena = (function () {
       ctx.fill();
     }
 
-    // Blade: tapered shape with a hilt, held toward whatever the hunter is
-    // currently facing/auto-attacking. Long, thick and dark-outlined so it
-    // reads clearly even at the character's small on-screen size, not just
-    // when zoomed in.
-    ctx.save();
-    ctx.translate(cx, cy);
-    ctx.rotate(angle);
+    // Blade(s): tapered shape with a hilt, spinning continuously around the
+    // hunter. Long, thick and dark-outlined so it reads clearly even at the
+    // character's small on-screen size. Talwar Strike's level adds more
+    // evenly-spaced blades (see Game.Weapons.bladeCountAt), so the weapon's
+    // growth is visible, not just a bigger number.
+    const talwar = Game.Weapons.get('bladeAcolyte');
+    const bladeCount = talwar ? Game.Weapons.bladeCountAt(talwar.level) : 1;
+    for (let i = 0; i < bladeCount; i++) {
+      const bladeAngle = angle + (Math.PI * 2 * i) / bladeCount;
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.rotate(bladeAngle);
 
-    ctx.strokeStyle = 'rgba(0,0,0,0.65)';
-    ctx.lineWidth = 1.5;
+      ctx.strokeStyle = 'rgba(0,0,0,0.65)';
+      ctx.lineWidth = 1.5;
 
-    const bladeGrad = ctx.createLinearGradient(10, 0, 42, 0);
-    bladeGrad.addColorStop(0, character.accentColor);
-    bladeGrad.addColorStop(1, '#ffffff');
-    ctx.fillStyle = bladeGrad;
-    ctx.beginPath();
-    ctx.moveTo(10, -4.5);
-    ctx.lineTo(32, -2);
-    ctx.lineTo(42, 0);
-    ctx.lineTo(32, 2);
-    ctx.lineTo(10, 4.5);
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
+      const bladeGrad = ctx.createLinearGradient(10, 0, 42, 0);
+      bladeGrad.addColorStop(0, character.accentColor);
+      bladeGrad.addColorStop(1, '#ffffff');
+      ctx.fillStyle = bladeGrad;
+      ctx.beginPath();
+      ctx.moveTo(10, -4.5);
+      ctx.lineTo(32, -2);
+      ctx.lineTo(42, 0);
+      ctx.lineTo(32, 2);
+      ctx.lineTo(10, 4.5);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
 
-    ctx.fillStyle = '#5a4632';
-    ctx.fillRect(-4, -3.5, 12, 7);
-    ctx.strokeRect(-4, -3.5, 12, 7);
-    ctx.restore();
+      ctx.fillStyle = '#5a4632';
+      ctx.fillRect(-4, -3.5, 12, 7);
+      ctx.strokeRect(-4, -3.5, 12, 7);
+      ctx.restore();
+    }
   }
 
   function drawEnemies(cx, cy) {
@@ -667,6 +686,56 @@ Game.Arena = (function () {
       ctx.arc(p.x, p.y, 8, 0, Math.PI * 2);
       ctx.fill();
     });
+
+    Game.Pickups.getHearts().forEach(function (heart) {
+      const p = worldToScreen(heart.x, heart.y, cx, cy);
+      if (p.x < 0 || p.x > w || p.y < 0 || p.y > h) return;
+
+      ctx.save();
+      ctx.globalAlpha = 0.35 * pulse;
+      ctx.fillStyle = '#ff5a6e';
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 20, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+      ctx.fillStyle = radialShade(p.x, p.y, 9, '#ff5a6e', 0.5);
+      const s = 9;
+      ctx.beginPath();
+      ctx.moveTo(p.x, p.y + s * 0.6);
+      ctx.bezierCurveTo(p.x - s * 1.3, p.y - s * 0.4, p.x - s * 0.5, p.y - s * 1.3, p.x, p.y - s * 0.3);
+      ctx.bezierCurveTo(p.x + s * 0.5, p.y - s * 1.3, p.x + s * 1.3, p.y - s * 0.4, p.x, p.y + s * 0.6);
+      ctx.closePath();
+      ctx.fill();
+    });
+
+    Game.Pickups.getPowerOrbs().forEach(function (orb) {
+      const p = worldToScreen(orb.x, orb.y, cx, cy);
+      if (p.x < 0 || p.x > w || p.y < 0 || p.y > h) return;
+
+      ctx.save();
+      ctx.globalAlpha = 0.4 * pulse;
+      ctx.fillStyle = '#a479e2';
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 20, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+
+      ctx.fillStyle = radialShade(p.x, p.y, 9, '#a479e2', 0.55);
+      ctx.beginPath();
+      ctx.moveTo(p.x, p.y - 10);
+      ctx.lineTo(p.x + 3, p.y - 2);
+      ctx.lineTo(p.x + 10, p.y - 1);
+      ctx.lineTo(p.x + 4, p.y + 4);
+      ctx.lineTo(p.x + 6, p.y + 11);
+      ctx.lineTo(p.x, p.y + 6);
+      ctx.lineTo(p.x - 6, p.y + 11);
+      ctx.lineTo(p.x - 4, p.y + 4);
+      ctx.lineTo(p.x - 10, p.y - 1);
+      ctx.lineTo(p.x - 3, p.y - 2);
+      ctx.closePath();
+      ctx.fill();
+    });
   }
 
   function drawWeaponEffects(cx, cy) {
@@ -724,6 +793,7 @@ Game.Arena = (function () {
     onDeathPrompt: onDeathPrompt,
     onResults: onResults,
     onWarlordBanner: onWarlordBanner,
-    onRevived: onRevived
+    onRevived: onRevived,
+    onNotify: onNotify
   };
 })();
