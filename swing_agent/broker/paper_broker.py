@@ -19,15 +19,17 @@ import uuid
 from dataclasses import asdict
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Callable
+from typing import Callable, Optional
 
 from swing_agent.broker.base import BrokerInterface, OrderResult, OrderSide, Position
+from swing_agent.config import Config
 
 
 class PaperBroker(BrokerInterface):
-    def __init__(self, state_file: Path, price_provider: Callable[[str], float], starting_cash: float):
+    def __init__(self, state_file: Path, price_provider: Callable[[str], float], starting_cash: float, config: Optional[Config] = None):
         self.state_file = Path(state_file)
         self.price_provider = price_provider
+        self.config = config  # if None, orders fill at zero transaction cost
         self._state = self._load_state(starting_cash)
 
     # -- persistence --------------------------------------------------
@@ -69,17 +71,22 @@ class PaperBroker(BrokerInterface):
             ))
         return out
 
-    def place_order(self, symbol: str, side: OrderSide, quantity: int, order_type: str = "MARKET", product: str = "CNC") -> OrderResult:
-        price = self.price_provider(symbol)
+    def place_order(self, symbol: str, side: OrderSide, quantity: int, order_type: str = "MARKET", product: str = "CNC", price: float | None = None) -> OrderResult:
+        price = price if price is not None else self.price_provider(symbol)
         now = datetime.now(timezone.utc)
         order_id = f"paper-{uuid.uuid4().hex[:10]}"
         signed_qty = quantity if side == "BUY" else -quantity
-        cost = price * quantity
+        trade_value = price * quantity
+
+        txn_cost = 0.0
+        if self.config is not None:
+            from swing_agent.costs import buy_side_cost, sell_side_cost
+            txn_cost = buy_side_cost(trade_value, self.config) if side == "BUY" else sell_side_cost(trade_value, self.config)
 
         if side == "BUY":
-            self._state["cash"] -= cost
+            self._state["cash"] -= (trade_value + txn_cost)
         else:
-            self._state["cash"] += cost
+            self._state["cash"] += (trade_value - txn_cost)
 
         pos = self._state["positions"].get(symbol, {"quantity": 0, "avg_price": 0.0, "opened_at": now.isoformat()})
         old_qty = pos["quantity"]

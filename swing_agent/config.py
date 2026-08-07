@@ -25,12 +25,33 @@ def _env_bool(name: str, default: bool = False) -> bool:
 
 @dataclass(frozen=True)
 class Config:
+    # Strategy selection
+    strategy_style: str          # "breakout" (Donchian/ATR or Kar-style) or "mean_reversion"
+
     # Risk
     capital: float
     risk_pct_per_trade: float
     max_open_positions: int
     max_daily_loss_pct: float
     reward_risk_min: float
+
+    # Transaction costs (NSE delivery/CNC, discount-broker fee schedule --
+    # see swing_agent/costs.py for the full breakdown)
+    brokerage_flat: float
+    stt_pct: float
+    stamp_duty_pct: float
+    exchange_txn_pct: float
+    gst_pct: float
+    dp_charge_flat: float
+
+    # Mean-reversion strategy (screener_mode/stop_method above are breakout-only)
+    mr_ma_period: int
+    mr_atr_period: int
+    mr_entry_atr_multiple: float
+    mr_limit_atr_multiple: float
+    mr_stop_atr_multiple: float
+    mr_max_hold_days: int
+    mr_min_atr_pct: float
 
     # Screener
     screener_mode: str          # "simple" (recommended) or "full"
@@ -101,11 +122,25 @@ def load_config(settings_path: str | Path = REPO_ROOT / "config" / "settings.yam
         raw = yaml.safe_load(f) or {}
 
     return Config(
+        strategy_style=str(raw.get("strategy_style", "breakout")),
         capital=float(raw.get("capital", 100000)),
         risk_pct_per_trade=float(raw.get("risk_pct_per_trade", 0.01)),
         max_open_positions=int(raw.get("max_open_positions", 5)),
         max_daily_loss_pct=float(raw.get("max_daily_loss_pct", 0.03)),
         reward_risk_min=float(raw.get("reward_risk_min", 1.5)),
+        brokerage_flat=float(raw.get("brokerage_flat", 0.0)),
+        stt_pct=float(raw.get("stt_pct", 0.001)),
+        stamp_duty_pct=float(raw.get("stamp_duty_pct", 0.00015)),
+        exchange_txn_pct=float(raw.get("exchange_txn_pct", 0.0000345)),
+        gst_pct=float(raw.get("gst_pct", 0.18)),
+        dp_charge_flat=float(raw.get("dp_charge_flat", 15.34)),
+        mr_ma_period=int(raw.get("mr_ma_period", 5)),
+        mr_atr_period=int(raw.get("mr_atr_period", 5)),
+        mr_entry_atr_multiple=float(raw.get("mr_entry_atr_multiple", 1.0)),
+        mr_limit_atr_multiple=float(raw.get("mr_limit_atr_multiple", 0.75)),
+        mr_stop_atr_multiple=float(raw.get("mr_stop_atr_multiple", 2.0)),
+        mr_max_hold_days=int(raw.get("mr_max_hold_days", 5)),
+        mr_min_atr_pct=float(raw.get("mr_min_atr_pct", 0.005)),
         screener_mode=str(raw.get("screener_mode", "simple")),
         rsi_period=int(raw.get("rsi_period", 14)),
         rsi_min=float(raw.get("rsi_min", 50)),

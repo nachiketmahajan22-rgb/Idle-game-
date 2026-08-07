@@ -95,8 +95,8 @@ class KiteBroker(BrokerInterface):
             ))
         return out
 
-    def place_order(self, symbol: str, side: OrderSide, quantity: int, order_type: str = "MARKET", product: str = "CNC") -> OrderResult:
-        order_id = self.kite.place_order(
+    def place_order(self, symbol: str, side: OrderSide, quantity: int, order_type: str = "MARKET", product: str = "CNC", price: float | None = None) -> OrderResult:
+        kwargs = dict(
             variety=self.kite.VARIETY_REGULAR,
             exchange=self.kite.EXCHANGE_NSE,
             tradingsymbol=symbol,
@@ -105,8 +105,18 @@ class KiteBroker(BrokerInterface):
             order_type=order_type,
             product=product,
         )
-        price = self.get_ltp(symbol)
+        if order_type == self.kite.ORDER_TYPE_LIMIT:
+            if price is None:
+                raise ValueError("a LIMIT order requires a price")
+            kwargs["price"] = price
+        order_id = self.kite.place_order(**kwargs)
+        # Kite's place_order only returns an order_id -- the real fill price
+        # (for MARKET orders, whatever the exchange executed at; for LIMIT
+        # orders, whether/when it fills at all) requires polling
+        # kite.orders()/kite.trades() on a later run. We report the
+        # last-traded price here as an immediate estimate, not a confirmed fill.
+        reported_price = price if price is not None else self.get_ltp(symbol)
         return OrderResult(
             order_id=str(order_id), symbol=symbol, side=side, quantity=quantity,
-            price=price, status="PLACED", timestamp=datetime.now(timezone.utc), simulated=False,
+            price=reported_price, status="PLACED", timestamp=datetime.now(timezone.utc), simulated=False,
         )

@@ -10,8 +10,14 @@ def make_config(**overrides) -> Config:
     screener_mode="simple", stop_method="atr" to test the recommended
     simplified mode instead."""
     defaults = dict(
+        strategy_style="breakout",
         capital=100_000, risk_pct_per_trade=0.01, max_open_positions=5,
         max_daily_loss_pct=0.03, reward_risk_min=1.0,
+        brokerage_flat=0.0, stt_pct=0.001, stamp_duty_pct=0.00015,
+        exchange_txn_pct=0.0000345, gst_pct=0.18, dp_charge_flat=15.34,
+        mr_ma_period=5, mr_atr_period=5, mr_entry_atr_multiple=1.0,
+        mr_limit_atr_multiple=0.75, mr_stop_atr_multiple=2.0,
+        mr_max_hold_days=5, mr_min_atr_pct=0.005,
         screener_mode="full", rsi_period=14, rsi_min=50, rsi_max=70, sma_period=10,
         volume_surge_multiple=1.5, lookback_range_days=10,
         trend_sma_period=20, min_avg_volume=0,

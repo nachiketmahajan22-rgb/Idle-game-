@@ -44,9 +44,17 @@ class BrokerInterface(ABC):
         """Last traded price for a symbol."""
 
     @abstractmethod
-    def place_order(self, symbol: str, side: OrderSide, quantity: int, order_type: str = "MARKET", product: str = "CNC") -> OrderResult:
+    def place_order(self, symbol: str, side: OrderSide, quantity: int, order_type: str = "MARKET", product: str = "CNC", price: Optional[float] = None) -> OrderResult:
         """Place an order. Paper implementations simulate the fill; live
-        implementations submit to the real exchange."""
+        implementations submit to the real exchange.
+
+        `price`: for a MARKET order this is ignored by KiteBroker (the
+        exchange decides the fill price) but PaperBroker fills at exactly
+        this price when given, instead of querying a live/last price —
+        pass the strategy's own computed entry/exit price (e.g. a
+        mean-reversion limit price) so the simulated fill and the
+        strategy's own bookkeeping never silently diverge. For a LIMIT
+        order, `price` is the limit price submitted to the exchange."""
 
     @abstractmethod
     def get_positions(self) -> list[Position]:

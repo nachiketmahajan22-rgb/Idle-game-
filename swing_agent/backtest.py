@@ -1,6 +1,14 @@
-"""Walk-forward backtest: replays the exact screener + breakout + risk
-rules used live, one trading day at a time, so backtest results reflect
-what the agent would actually have done — not a vectorized approximation.
+"""Walk-forward backtest: replays the exact screener/breakout/mean-reversion
++ risk rules used live, one trading day at a time, so backtest results
+reflect what the agent would actually have done — not a vectorized
+approximation. Dispatches on `config.strategy_style` ("breakout" or
+"mean_reversion").
+
+Transaction costs (STT, exchange charges, stamp duty, GST, DP charges —
+see `swing_agent/costs.py`) are deducted from every trade's P&L, so
+`total_pnl` etc. reflect what you'd actually keep, not gross trade value.
+This matters more for mean-reversion (much higher trade frequency, so
+costs are a bigger fraction of the edge) than for breakout.
 
 Performance note: this recomputes indicators on an expanding window for
 every symbol on every day, which is O(days x symbols x indicator_cost).
@@ -15,9 +23,11 @@ from dataclasses import dataclass, field
 import pandas as pd
 
 from swing_agent.config import Config
+from swing_agent.costs import buy_side_cost, sell_side_cost
 from swing_agent.data.market_data import fetch_history_yfinance, load_universe_symbols
-from swing_agent.risk.position_sizing import ExposureGuard, size_position
+from swing_agent.risk.position_sizing import ExposureGuard, cap_quantity_by_capital, size_position
 from swing_agent.strategy.breakout import detect_breakout, update_trailing_stop
+from swing_agent.strategy.mean_reversion import check_exit, check_limit_fill, detect_pullback_signal, screen_symbol_mr
 from swing_agent.strategy.screener import screen_symbol
 
 
@@ -31,7 +41,8 @@ class BacktestTrade:
     entry_date: str
     exit_date: str
     exit_reason: str
-    pnl: float
+    pnl: float          # net of transaction costs
+    costs: float
     risk_amount: float
 
     @property
@@ -62,6 +73,10 @@ class BacktestResult:
         return sum(t.pnl for t in self.trades)
 
     @property
+    def total_costs(self) -> float:
+        return sum(t.costs for t in self.trades)
+
+    @property
     def max_drawdown_pct(self) -> float:
         if self.equity_curve.empty:
             return 0.0
@@ -72,32 +87,48 @@ class BacktestResult:
     def summary(self) -> str:
         return (
             f"Trades: {len(self.trades)} | Win rate: {self.win_rate:.1%} | "
-            f"Avg R: {self.avg_r_multiple:.2f} | Total P&L: {self.total_pnl:,.2f} | "
-            f"Max drawdown: {self.max_drawdown_pct:.1%}"
+            f"Avg R: {self.avg_r_multiple:.2f} | Total P&L: {self.total_pnl:,.2f} "
+            f"(costs: {self.total_costs:,.2f}) | Max drawdown: {self.max_drawdown_pct:.1%}"
         )
 
 
-def run_backtest(config: Config, start_date: str, end_date: str, symbols: list[str] | None = None) -> BacktestResult:
-    symbols = symbols or load_universe_symbols(config)
-
+def _load_history(symbols: list[str]) -> dict[str, pd.DataFrame]:
     history: dict[str, pd.DataFrame] = {}
     for sym in symbols:
         df = fetch_history_yfinance(sym, period="max")
         if not df.empty:
             df.index = pd.to_datetime(df.index).tz_localize(None)
             history[sym] = df
+    return history
 
+
+def _trading_dates(history: dict[str, pd.DataFrame], start_date: str, end_date: str) -> list[pd.Timestamp]:
+    all_dates = sorted(set().union(*[set(df.index) for df in history.values()]))
+    return [d for d in all_dates if pd.Timestamp(start_date) <= d <= pd.Timestamp(end_date)]
+
+
+def run_backtest(config: Config, start_date: str, end_date: str, symbols: list[str] | None = None) -> BacktestResult:
+    symbols = symbols or load_universe_symbols(config)
+    history = _load_history(symbols)
     if not history:
         return BacktestResult()
 
-    all_dates = sorted(set().union(*[set(df.index) for df in history.values()]))
-    trading_dates = [d for d in all_dates if pd.Timestamp(start_date) <= d <= pd.Timestamp(end_date)]
+    if config.strategy_style == "mean_reversion":
+        return _run_backtest_mean_reversion(config, history, start_date, end_date)
+    if config.strategy_style == "breakout":
+        return _run_backtest_breakout(config, history, start_date, end_date)
+    raise ValueError(f"unknown strategy_style: {config.strategy_style!r} (expected 'breakout' or 'mean_reversion')")
+
+
+# ---------------------------------------------------------------- breakout --
+
+def _run_backtest_breakout(config: Config, history: dict[str, pd.DataFrame], start_date: str, end_date: str) -> BacktestResult:
+    trading_dates = _trading_dates(history, start_date, end_date)
 
     cash = config.capital
     open_positions: dict[str, dict] = {}
     trades: list[BacktestTrade] = []
     equity_points: list[tuple[pd.Timestamp, float]] = []
-    realized_today: dict[pd.Timestamp, float] = {}
 
     guard = ExposureGuard(
         max_open_positions=config.max_open_positions,
@@ -132,14 +163,17 @@ def run_backtest(config: Config, start_date: str, end_date: str, symbols: list[s
 
             if exit_price is not None:
                 direction = 1 if pos["side"] == "long" else -1
-                pnl = (exit_price - pos["entry_price"]) * pos["quantity"] * direction
-                cash += pos["entry_price"] * pos["quantity"] + pnl if pos["side"] == "long" else pos["entry_price"] * pos["quantity"] - pnl
-                day_realized += pnl
+                gross_pnl = (exit_price - pos["entry_price"]) * pos["quantity"] * direction
+                sell_costs = sell_side_cost(exit_price * pos["quantity"], config)
+                net_pnl = gross_pnl - sell_costs - pos["buy_costs"]
+                cash += pos["entry_price"] * pos["quantity"] + gross_pnl - sell_costs if pos["side"] == "long" else pos["entry_price"] * pos["quantity"] - gross_pnl - sell_costs
+                day_realized += net_pnl
                 trades.append(BacktestTrade(
                     symbol=sym, side=pos["side"], quantity=pos["quantity"],
                     entry_price=pos["entry_price"], exit_price=exit_price,
                     entry_date=str(pos["entry_date"].date()), exit_date=str(today.date()),
-                    exit_reason=exit_reason, pnl=pnl, risk_amount=pos["risk_amount"],
+                    exit_reason=exit_reason, pnl=net_pnl, costs=sell_costs + pos["buy_costs"],
+                    risk_amount=pos["risk_amount"],
                 ))
                 del open_positions[sym]
             else:
@@ -185,15 +219,19 @@ def run_backtest(config: Config, start_date: str, end_date: str, symbols: list[s
             # false) because NSE cash-equity CNC delivery can't hold an
             # overnight short in the first place — if you extend this to
             # F&O/MIS shorting, model margin instead of a cash debit here.
-            cost = signal.entry_price * sizing.quantity
-            if cost > cash:
-                continue  # not enough backtest cash to take this position
+            quantity = cap_quantity_by_capital(sizing.quantity, signal.entry_price, cash)
+            if quantity <= 0:
+                continue
+            trade_value = signal.entry_price * quantity
+            buy_costs = buy_side_cost(trade_value, config)
+            if trade_value + buy_costs > cash:
+                continue
 
-            cash -= cost
+            cash -= (trade_value + buy_costs)
             open_positions[sym] = {
-                "side": signal.side, "quantity": sizing.quantity, "entry_price": signal.entry_price,
+                "side": signal.side, "quantity": quantity, "entry_price": signal.entry_price,
                 "stop_loss": signal.stop_loss, "target_price": signal.target_price,
-                "entry_date": today, "risk_amount": sizing.risk_amount,
+                "entry_date": today, "risk_amount": sizing.risk_amount, "buy_costs": buy_costs,
             }
 
         # 3. Mark-to-market equity for this day
@@ -204,6 +242,111 @@ def run_backtest(config: Config, start_date: str, end_date: str, symbols: list[s
                 price = float(df.loc[today, "close"])
                 direction = 1 if pos["side"] == "long" else -1
                 mtm += pos["entry_price"] * pos["quantity"] + (price - pos["entry_price"]) * pos["quantity"] * direction
+        equity_points.append((today, mtm))
+
+    equity_curve = pd.Series({d: v for d, v in equity_points}).sort_index()
+    return BacktestResult(trades=trades, equity_curve=equity_curve)
+
+
+# ---------------------------------------------------------- mean-reversion --
+
+def _run_backtest_mean_reversion(config: Config, history: dict[str, pd.DataFrame], start_date: str, end_date: str) -> BacktestResult:
+    trading_dates = _trading_dates(history, start_date, end_date)
+
+    cash = config.capital
+    open_positions: dict[str, dict] = {}   # sym -> {quantity, entry_price, stop_loss, entry_date, risk_amount, buy_costs}
+    pending: dict[str, dict] = {}          # sym -> {limit_price, stop_loss}
+    trades: list[BacktestTrade] = []
+    equity_points: list[tuple[pd.Timestamp, float]] = []
+
+    guard = ExposureGuard(
+        max_open_positions=config.max_open_positions,
+        max_daily_loss_pct=config.max_daily_loss_pct,
+        capital=config.capital,
+    )
+
+    for today in trading_dates:
+        day_realized = 0.0
+
+        # 1. Manage exits on open positions using today's bar
+        for sym in list(open_positions.keys()):
+            df = history.get(sym)
+            if df is None or today not in df.index:
+                continue
+            df_upto_today = df.loc[:today]
+            pos = open_positions[sym]
+
+            exit_price, exit_reason = check_exit(
+                entry_price=pos["entry_price"], stop_loss=pos["stop_loss"],
+                entry_date=pos["entry_date"], ohlcv=df_upto_today, config=config,
+            )
+            if exit_price is not None:
+                gross_pnl = (exit_price - pos["entry_price"]) * pos["quantity"]
+                sell_costs = sell_side_cost(exit_price * pos["quantity"], config)
+                net_pnl = gross_pnl - sell_costs - pos["buy_costs"]
+                cash += pos["entry_price"] * pos["quantity"] + gross_pnl - sell_costs
+                day_realized += net_pnl
+                trades.append(BacktestTrade(
+                    symbol=sym, side="long", quantity=pos["quantity"],
+                    entry_price=pos["entry_price"], exit_price=exit_price,
+                    entry_date=str(pos["entry_date"]), exit_date=str(today.date()),
+                    exit_reason=exit_reason, pnl=net_pnl, costs=sell_costs + pos["buy_costs"],
+                    risk_amount=pos["risk_amount"],
+                ))
+                del open_positions[sym]
+
+        # 2. Attempt to fill yesterday's pending signals against today's low
+        for sym in list(pending.keys()):
+            df = history.get(sym)
+            order = pending.pop(sym)
+            if df is None or today not in df.index or sym in open_positions:
+                continue
+            today_low = float(df.loc[today, "low"])
+            if not check_limit_fill(order["limit_price"], today_low):
+                continue  # expired unfilled
+            can_open, _ = guard.can_open_new_position(currently_open=len(open_positions), realized_pnl_today=day_realized)
+            if not can_open:
+                continue
+            sizing = size_position(
+                capital=config.capital, risk_pct_per_trade=config.risk_pct_per_trade,
+                entry_price=order["limit_price"], stop_loss_price=order["stop_loss"],
+                target_price=None, reward_risk_min=config.reward_risk_min, side="long",
+            )
+            if not sizing.is_valid:
+                continue
+            quantity = cap_quantity_by_capital(sizing.quantity, order["limit_price"], cash)
+            if quantity <= 0:
+                continue
+            trade_value = order["limit_price"] * quantity
+            buy_costs = buy_side_cost(trade_value, config)
+            if trade_value + buy_costs > cash:
+                continue
+            cash -= (trade_value + buy_costs)
+            open_positions[sym] = {
+                "quantity": quantity, "entry_price": order["limit_price"], "stop_loss": order["stop_loss"],
+                "entry_date": today, "risk_amount": sizing.risk_amount, "buy_costs": buy_costs,
+            }
+
+        # 3. Screen today's close for tomorrow's pullback signals
+        for sym, df in history.items():
+            if sym in open_positions or today not in df.index:
+                continue
+            df_upto_today = df.loc[:today]
+            screen = screen_symbol_mr(sym, df_upto_today, config)
+            if not screen.passed:
+                continue
+            signal = detect_pullback_signal(sym, df_upto_today, config)
+            if not signal.triggered:
+                continue
+            pending[sym] = {"limit_price": signal.limit_price, "stop_loss": signal.stop_loss}
+
+        # 4. Mark-to-market equity for this day
+        mtm = cash
+        for sym, pos in open_positions.items():
+            df = history.get(sym)
+            if df is not None and today in df.index:
+                price = float(df.loc[today, "close"])
+                mtm += pos["entry_price"] * pos["quantity"] + (price - pos["entry_price"]) * pos["quantity"]
         equity_points.append((today, mtm))
 
     equity_curve = pd.Series({d: v for d, v in equity_points}).sort_index()

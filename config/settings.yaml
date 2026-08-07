@@ -1,6 +1,17 @@
 # Swing trading agent configuration
 # Secrets (API keys/tokens) go in .env, NOT here.
 
+# --- Strategy selection ---
+# breakout: Donchian-channel breakout + ATR risk (see screener_mode/stop_method
+#   below) -- trend-following, needs sustained directional moves to pay off.
+#   Backtested weak in the choppy Nifty market since late 2024.
+# mean_reversion: buy pullbacks to MA5 - N*ATR5 in stocks still above their
+#   long-term trend, exit on the first up-day or a max hold -- backtested
+#   profitable in every window tested, including the recent choppy stretch,
+#   at ~2x the win rate and a fraction of the drawdown of breakout. Trades
+#   far more often, so it's more exposed to transaction costs (see below).
+strategy_style: breakout
+
 # --- Capital & risk management ---
 capital: 50000                # total ₹ capital allocated to this strategy
 risk_pct_per_trade: 0.01     # risk 1% of capital per trade
@@ -41,8 +52,28 @@ trail_method: breakeven        # 'breakeven' = floor at entry once armed, then k
 atr_period: 14
 atr_trail_multiple: 2.0
 
+# --- Mean-reversion strategy (only used when strategy_style: mean_reversion) ---
+mr_ma_period: 5                # short MA the pullback is measured against
+mr_atr_period: 5                # ATR period for the entry band, stop, and volatility floor
+mr_entry_atr_multiple: 1.0       # signal: close < MA5 - this x ATR5
+mr_limit_atr_multiple: 0.75       # next-day limit price: signal_close - this x ATR5
+mr_stop_atr_multiple: 2.0          # hard stop: entry - this x ATR5 (not in the original rule --
+                                     # added so a single bad gap can't go unprotected)
+mr_max_hold_days: 5                  # force-exit if neither a stop nor a rising day closes it first
+mr_min_atr_pct: 0.005                 # skip stocks with ATR5/close below this (too quiet to trade)
+
 # --- Universe ---
 universe_file: config/watchlist.csv
+
+# --- Transaction costs (NSE delivery/CNC, discount-broker schedule) ---
+# See swing_agent/costs.py for the full breakdown. Applied in backtests and
+# in PaperBroker so simulated P&L matches what you'd actually keep.
+brokerage_flat: 0.0            # ₹0 -- standard for delivery on discount brokers (Zerodha et al.)
+stt_pct: 0.001                  # 0.1% Securities Transaction Tax, BOTH buy and sell
+stamp_duty_pct: 0.00015          # 0.015%, buy side only
+exchange_txn_pct: 0.0000345       # 0.00345% NSE exchange transaction charge, both sides
+gst_pct: 0.18                      # 18% GST on (brokerage + exchange transaction charges)
+dp_charge_flat: 15.34               # ₹ flat, per scrip per day sold (depository participant fee)
 
 # --- Execution ---
 broker: kite                  # kite | paper (paper forces simulated fills regardless of live_trading)
