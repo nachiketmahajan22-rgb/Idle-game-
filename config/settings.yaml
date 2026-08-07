@@ -2,7 +2,7 @@
 # Secrets (API keys/tokens) go in .env, NOT here.
 
 # --- Capital & risk management ---
-capital: 100000              # total ₹ capital allocated to this strategy
+capital: 50000                # total ₹ capital allocated to this strategy
 risk_pct_per_trade: 0.01     # risk 1% of capital per trade
 max_open_positions: 5        # max concurrent swing positions
 max_daily_loss_pct: 0.03     # stop opening new trades after losing 3% of capital in a day
