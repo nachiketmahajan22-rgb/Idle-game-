@@ -144,6 +144,48 @@ persist across daily runs — tracked as `PendingOrder`s in
 `swing_agent/state.py`, resolved (filled or expired) within one trading day
 each.
 
+## Strategy comparison
+
+Both strategies backtested on real NSE data (Aug 2022 - Aug 2026, ₹50,000
+capital, transaction costs applied), across the full period and two more
+recent sub-windows:
+
+| Strategy | Universe | Window | Trades | Win% | Net P&L | Costs | Max DD |
+|---|---|---|---|---|---|---|---|
+| Breakout | Nifty 50 | Full 4yr | 170 | 45.9% | -₹4,542 | ₹5,731 | -19.8% |
+| Breakout | Nifty 50 | Last 2yr | 81 | 40.7% | -₹8,174 | ₹2,693 | -20.0% |
+| Breakout | Nifty 50 | Last 1yr | 41 | 41.5% | -₹2,528 | ₹1,405 | -11.7% |
+| Breakout | Nifty 200 | Full 4yr | 210 | 48.6% | +₹1,153 | ₹6,405 | -21.7% |
+| Breakout | Nifty 200 | Last 2yr | 105 | 39.0% | -₹12,792 | ₹3,147 | -28.8% |
+| Breakout | Nifty 200 | Last 1yr | 51 | 45.1% | +₹781 | ₹1,614 | -9.0% |
+| Mean-reversion | Nifty 50 | Full 4yr | 224 | 52.2% | -₹2,009 | ₹8,297 | -11.3% |
+| Mean-reversion | Nifty 50 | Last 2yr | 101 | 46.5% | -₹1,534 | ₹3,739 | -7.2% |
+| Mean-reversion | Nifty 50 | Last 1yr | 47 | 48.9% | -₹78 | ₹1,804 | -3.7% |
+| Mean-reversion | Nifty 200 | Full 4yr | 551 | 55.5% | +₹4,606 | ₹18,488 | -9.8% |
+| Mean-reversion | Nifty 200 | Last 2yr | 265 | 49.4% | -₹936 | ₹8,824 | -11.0% |
+| Mean-reversion | Nifty 200 | Last 1yr | 129 | 46.5% | -₹314 | ₹4,494 | -6.4% |
+
+**Honest read: neither strategy has a robust edge net of real transaction
+costs.** The best single result (mean-reversion, Nifty 200, full 4 years,
++₹4,606) is roughly +9% total on ₹50k over 4 years — about 2%/year — and it
+paid ₹18,488 in costs to get there, 4x what breakout paid on the same
+universe/window, because it trades far more often. Both strategies are
+flat-to-negative in the most recent 1-2 years on both universes, which
+matters more than the full-period number if you're asking "would this work
+starting today."
+
+What **does** hold up as a real, structural difference: mean-reversion's
+drawdowns are consistently 2-3x smaller than breakout's, because it holds
+positions for days rather than months — that's a property of the mechanic
+itself, not an artifact of one lucky window.
+
+**Before risking real capital on either**: this comparison is a starting
+point for further research (e.g. regime-switching between the two,
+concentrating into fewer/larger positions to dilute the flat DP-charge
+drag on mean-reversion, or testing on a longer/different history), not a
+green light. Run `scripts/run_backtest.py` yourself on the exact universe,
+window, and parameters you're considering before trusting any number here.
+
 ## Project layout
 
 ```
