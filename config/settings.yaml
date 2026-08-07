@@ -1,15 +1,17 @@
-# Swing trading agent configuration
+# Positional trading agent configuration
 # Secrets (API keys/tokens) go in .env, NOT here.
 
 # --- Strategy selection ---
 # breakout: Donchian-channel breakout + ATR risk (see screener_mode/stop_method
-#   below) -- trend-following, needs sustained directional moves to pay off.
-#   Backtested weak in the choppy Nifty market since late 2024.
-# mean_reversion: buy pullbacks to MA5 - N*ATR5 in stocks still above their
-#   long-term trend, exit on the first up-day or a max hold -- backtested
-#   profitable in every window tested, including the recent choppy stretch,
-#   at ~2x the win rate and a fraction of the drawdown of breakout. Trades
-#   far more often, so it's more exposed to transaction costs (see below).
+#   below). Configured below for POSITIONAL trading (weeks-to-months holds,
+#   ~130-160 day average) -- see lookback_range_days/atr_stop_multiple/
+#   trail_after_r_multiple/atr_trail_multiple, each commented with its
+#   original swing-trading (~30-40 day hold) value if you want to revert.
+# mean_reversion: buy pullbacks to MA5 - N*ATR5, exit on the first up-day or
+#   a max hold of days. Structurally short-term (1-5 day holds) -- cannot
+#   serve a positional goal regardless of tuning. Kept in the repo, tested
+#   and working, but not the active focus while strategy_style: breakout
+#   (positional) is the target -- parked, not deleted.
 strategy_style: breakout
 
 # --- Capital & risk management ---
@@ -32,7 +34,8 @@ rsi_min: 50
 rsi_max: 70
 sma_period: 26                    # "full" mode's shorter trend check (Kar references 26 SMA)
 volume_surge_multiple: 1.5         # "full" mode: today's volume vs 20-day average
-lookback_range_days: 20              # Donchian/breakout lookback (both modes) -- "N-day high breakout"
+lookback_range_days: 55              # Donchian/breakout lookback (both modes) -- "N-day high breakout".
+                                       # Positional: 55 (long-term breakout horizon). Swing value was 20.
 
 # --- Breakout entry rules ---
 breakout_confirmation: close   # 'close' = candle must close beyond the range (fewer false breakouts)
@@ -41,16 +44,41 @@ breakout_confirmation: close   # 'close' = candle must close beyond the range (f
 #   single candle's wick can be.
 # stop_method: candle = original Kar-style stop at the breakout bar's low/high.
 stop_method: atr
-atr_stop_multiple: 2.5
+atr_stop_multiple: 4.0          # Positional: 4.0 (more room for a multi-month hold). Swing value was 2.5.
 use_fixed_target: false        # false (recommended): no fixed take-profit, let the trailing
                                  # stop harvest the trade -- standard trend-following practice.
                                  # true = Kar-style fixed target (range height projected from entry).
-trail_after_r_multiple: 1.0    # start trailing stop once trade is up 1R
+trail_after_r_multiple: 2.0    # Positional: 2.0 (don't protect profit until 2R). Swing value was 1.0.
 trail_method: breakeven        # 'breakeven' = floor at entry once armed, then keeps
                                 # ratcheting up via ATR as price extends (never freezes).
                                 # 'atr' = pure ATR trail, no explicit breakeven floor.
 atr_period: 14
-atr_trail_multiple: 2.0
+atr_trail_multiple: 3.5           # Positional: 3.5 (trail looser once armed). Swing value was 2.0.
+
+# --- Market regime & relative-strength filters (breakout screener only) ---
+# A/B backtested (README's strategy-comparison section): baseline vs
+# +regime vs +regime+RS, both universes, full-4yr/last-2yr/last-1yr windows.
+# +regime alone wasn't consistently better. +regime+RS turned the last-1yr
+# avg R-multiple from clearly negative to clearly positive on BOTH Nifty 50
+# (-0.41 -> +0.47) and Nifty 200 (-0.24 -> +0.24), roughly doubled win rate,
+# and cut max drawdown by more than half on both -- so both are on by
+# default. Caveat: only 9-12 trades in that winning last-1yr sample per
+# universe -- directionally consistent across two universes, but
+# statistically thin; re-validate before trusting this over a longer
+# stretch. When on, requires the benchmark index's OHLCV to be supplied to
+# screen_symbol()/find_new_entries_breakout() -- fails loudly rather than
+# silently skipping if that's missing.
+use_regime_filter: true         # only take new trades when the benchmark index
+                                  # is itself above its own regime_sma_period SMA.
+regime_index_symbol: "^NSEI"      # benchmark index for your configured universe --
+                                    # ^NSEI (Nifty 50) or ^CNX200 (Nifty 200); match
+                                    # this to whatever universe_file actually holds.
+regime_sma_period: 200
+use_relative_strength_filter: true    # only trade stocks outperforming the benchmark
+                                        # index over rs_lookback_days (IBD-style RS).
+rs_lookback_days: 252
+rs_min_relative_return: 0.0             # stock's weighted return must exceed the
+                                          # index's by at least this much (0.0 = merely beating it)
 
 # --- Mean-reversion strategy (only used when strategy_style: mean_reversion) ---
 mr_ma_period: 5                # short MA the pullback is measured against

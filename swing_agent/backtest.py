@@ -107,22 +107,35 @@ def _trading_dates(history: dict[str, pd.DataFrame], start_date: str, end_date: 
     return [d for d in all_dates if pd.Timestamp(start_date) <= d <= pd.Timestamp(end_date)]
 
 
-def run_backtest(config: Config, start_date: str, end_date: str, symbols: list[str] | None = None) -> BacktestResult:
+def run_backtest(config: Config, start_date: str, end_date: str, symbols: list[str] | None = None, index_symbol: str | None = None) -> BacktestResult:
+    """`index_symbol` overrides `config.regime_index_symbol` for this call --
+    useful for testing the same strategy against multiple universes (e.g.
+    Nifty 50 vs Nifty 200), each with its own matching benchmark index,
+    without needing a separate Config per universe. Only fetched at all
+    when `use_regime_filter`/`use_relative_strength_filter` is on."""
     symbols = symbols or load_universe_symbols(config)
     history = _load_history(symbols)
     if not history:
         return BacktestResult()
 
+    index_history = None
+    if config.strategy_style == "breakout" and (config.use_regime_filter or config.use_relative_strength_filter):
+        resolved_index_symbol = index_symbol or config.regime_index_symbol
+        index_history = fetch_history_yfinance(resolved_index_symbol, period="max")
+        if index_history.empty:
+            raise ValueError(f"regime/relative-strength filter is enabled but no data returned for index symbol {resolved_index_symbol!r}")
+        index_history.index = pd.to_datetime(index_history.index).tz_localize(None)
+
     if config.strategy_style == "mean_reversion":
         return _run_backtest_mean_reversion(config, history, start_date, end_date)
     if config.strategy_style == "breakout":
-        return _run_backtest_breakout(config, history, start_date, end_date)
+        return _run_backtest_breakout(config, history, start_date, end_date, index_history)
     raise ValueError(f"unknown strategy_style: {config.strategy_style!r} (expected 'breakout' or 'mean_reversion')")
 
 
 # ---------------------------------------------------------------- breakout --
 
-def _run_backtest_breakout(config: Config, history: dict[str, pd.DataFrame], start_date: str, end_date: str) -> BacktestResult:
+def _run_backtest_breakout(config: Config, history: dict[str, pd.DataFrame], start_date: str, end_date: str, index_history: pd.DataFrame | None = None) -> BacktestResult:
     trading_dates = _trading_dates(history, start_date, end_date)
 
     cash = config.capital
@@ -195,9 +208,18 @@ def _run_backtest_breakout(config: Config, history: dict[str, pd.DataFrame], sta
 
             df_upto_today = df.loc[:today]
             # Screen on data through yesterday, confirm the breakout trigger
-            # on today's bar — see the matching comment in agent.py.
-            screen = screen_symbol(sym, df_upto_today.iloc[:-1], config) if len(df_upto_today) > 1 else None
-            if screen is None or not screen.passed:
+            # on today's bar — see the matching comment in agent.py. The
+            # regime/RS check uses the same "through yesterday" slice of the
+            # index, for the same look-ahead-avoidance reason.
+            if len(df_upto_today) <= 1:
+                continue
+            index_upto_yesterday = None
+            if index_history is not None:
+                index_slice = index_history.loc[:today]
+                if len(index_slice) > 1:
+                    index_upto_yesterday = index_slice.iloc[:-1]
+            screen = screen_symbol(sym, df_upto_today.iloc[:-1], config, index_ohlcv=index_upto_yesterday)
+            if not screen.passed:
                 continue
             signal = detect_breakout(sym, df_upto_today, config)
             if not signal.triggered:

@@ -1,18 +1,24 @@
-# Swing Trading Agent (NSE)
+# Positional Trading Agent (NSE)
 
-An algorithmic swing-trading agent for Indian equities (NSE). Two top-level
-strategies, switchable via `strategy_style` in `config/settings.yaml`:
+An algorithmic **positional** trading agent for Indian equities (NSE) —
+holds weeks to months per trade, not days. Two top-level strategies,
+switchable via `strategy_style` in `config/settings.yaml`:
 
-- **`strategy_style: breakout`** (default) — Donchian-channel breakout +
-  ATR risk (or the Kar-style variant, both selectable within this strategy —
-  see below). Trend-following: needs sustained directional moves to pay off.
+- **`strategy_style: breakout`** (default, the active focus) —
+  Donchian-channel breakout + ATR risk, tuned for a positional (~130-160
+  day average) hold: a 55-day breakout lookback, a wide 4×ATR stop, and a
+  loose trailing stop that doesn't arm until 2R profit — see
+  [Why these are positional, not swing, settings](#why-these-are-positional-not-swing-settings)
+  below for the reasoning and the numbers behind each choice. Filtered by
+  a market-regime + relative-strength gate — see
+  [Regime & relative-strength filters](#regime--relative-strength-filters).
 - **`strategy_style: mean_reversion`** — buys pullbacks to `MA5 −
-  N×ATR5` in stocks still above their long-term trend, exits on the first
-  up-day or a max hold. Built specifically because breakout backtested weak
-  in the choppy Nifty market since late 2024 (see
-  [Strategy comparison](#strategy-comparison) below) — but its edge is much
-  smaller once realistic transaction costs are applied, since it trades far
-  more often than breakout. Read that section before picking one.
+  N×ATR5`, exits on the first up-day or a max hold of days. Structurally a
+  **1-5 day** hold — cannot serve a positional goal no matter how it's
+  tuned. Built and tested earlier as an alternative to swing breakout (see
+  [Strategy comparison](#strategy-comparison)), and the code stays in the
+  repo, working and tested — but it's **parked, not actively developed**,
+  since the actual goal here is positional trading, which this can't be.
 
 Within `strategy_style: breakout`, two further sub-modes:
 
@@ -63,6 +69,100 @@ at the breakout candle's exact low/high. Two problems surfaced in testing:
 Removing the fixed take-profit (`use_fixed_target: false`) follows the same
 logic: trend-following systems let the trailing stop harvest a trade rather
 than capping the upside on the wins that are supposed to pay for the losses.
+
+## Why these are positional, not swing, settings
+
+The breakout parameters below were originally tuned for swing trading
+(~30-40 day average hold): `lookback_range_days: 20`, `atr_stop_multiple:
+2.5`, `trail_after_r_multiple: 1.0`, `atr_trail_multiple: 2.0`. Backtested
+against real NSE data, that swing configuration lost money in 5 of 6
+strategy×universe×window combinations tested. Widening every one of those
+four parameters for a genuinely positional hold changed that:
+
+| Parameter | Swing value | Positional value (current default) | Why |
+|---|---|---|---|
+| `lookback_range_days` | 20 | **55** | Breaks out of a long-term range, not a short-term one |
+| `atr_stop_multiple` | 2.5 | **4.0** | A multi-month hold needs room to breathe without getting stopped on normal noise |
+| `trail_after_r_multiple` | 1.0 | **2.0** | Don't start protecting profit until the trade has proven itself further |
+| `atr_trail_multiple` | 2.0 | **3.5** | Trail looser once armed, so a real trend isn't cut short |
+
+Backtest comparison (₹50,000 capital, Nifty 50, full 4-year window,
+transaction costs applied):
+
+| Config | Trades | Win% | Avg R | Net P&L | Max DD | Avg hold |
+|---|---|---|---|---|---|---|
+| Swing | 170 | 45.9% | -0.05 | -₹4,542 | -19.8% | 39 days |
+| **Positional** | 42 | 38.1% | **0.84** | **+₹17,645** | -13.7% | **162 days** |
+
+Trade count drops ~4x (fewer, more selective entries) and avg R-multiple
+goes from slightly negative to genuinely strong. See
+[Strategy comparison](#strategy-comparison) below for the full
+multi-window picture, including the recent-window weakness that motivated
+the regime/relative-strength filters in the next section — the positional
+config alone still isn't reliably profitable in the last 1-2 years by
+itself; it needed those filters too.
+
+## Regime & relative-strength filters
+
+Neither swing nor positional breakout was consistently profitable in the
+last 1-2 years on either universe — the underlying issue turned out to be
+regime, not holding period: Nifty has been genuinely choppy/range-bound
+since late 2024 (tariff-led correction in early 2025, an oil/geopolitics
+selloff in 2026, sustained FPI selling), which punishes trend-following
+breakouts regardless of parameters.
+
+Research into established, long-track-record screening systems (Mark
+Minervini's Trend Template, William O'Neil's CANSLIM/IBD) found the one
+ingredient every credible system checks that this screener didn't:
+**relative strength vs. the market**, paired with a **market-regime
+filter** (only trade with the prevailing trend). Both are implemented in
+`swing_agent/strategy/regime.py`:
+
+- **`use_regime_filter`**: only take new trades when the benchmark index
+  itself (`regime_index_symbol` — `^NSEI` for Nifty 50, `^CNX200` for
+  Nifty 200) is above its own `regime_sma_period`-day SMA. Skips all new
+  entries on days the broader market is unhealthy, regardless of how good
+  an individual stock's breakout looks.
+- **`use_relative_strength_filter`**: only trade stocks whose IBD-style
+  relative strength (a 40/20/20/20-weighted rate-of-change over
+  `rs_lookback_days`, `swing_agent/strategy/regime.py::relative_strength`)
+  beats the benchmark index's by at least `rs_min_relative_return` — only
+  trade actual leaders, not stocks merely drifting up with the market.
+
+A/B backtested against the positional baseline, both on (₹50,000 capital, transaction costs applied):
+
+| Variant | Universe | Window | Trades | Win% | Avg R | Net P&L | Max DD |
+|---|---|---|---|---|---|---|---|
+| Baseline | Nifty 50 | Last 1yr | 17 | 23.5% | -0.41 | -₹3,448 | -12.1% |
+| +regime | Nifty 50 | Last 1yr | 12 | 33.3% | -0.17 | -₹1,000 | -7.8% |
+| **+regime+RS** | Nifty 50 | Last 1yr | **9** | **66.7%** | **+0.47** | **+₹2,132** | **-4.6%** |
+| Baseline | Nifty 200 | Last 1yr | 23 | 30.4% | -0.24 | -₹2,742 | -14.4% |
+| +regime | Nifty 200 | Last 1yr | 17 | 29.4% | -0.25 | -₹2,126 | -11.1% |
+| **+regime+RS** | Nifty 200 | Last 1yr | **12** | **41.7%** | **+0.24** | **+₹1,439** | **-5.3%** |
+
+**Both on by default** — the combined filter turned avg R-multiple from
+clearly negative to clearly positive in the most recent year, **on both
+universes independently**, roughly doubled-to-tripled win rate, and cut
+max drawdown by more than half. Regime alone wasn't consistently better;
+relative strength is doing most of the work.
+
+**Two honest caveats, read before trusting this**:
+1. **Small sample** — only 9 and 12 trades in the winning last-1yr rows.
+   Directionally consistent across two independent universes (a real
+   signal, not noise from one lucky universe), but a handful of trades
+   either way could still flip the sign. Re-validate over time before
+   trusting this as settled.
+2. **It costs some historical upside** — Nifty 50's full-4-year P&L drops
+   from +₹17,645 (baseline) to +₹15,179 (+regime+RS): the filter trades
+   away some of the easy 2022-2024 bull-market profit specifically to gain
+   robustness in the choppy recent period. That's the intended trade-off,
+   not a bug — but it means the filter isn't a pure improvement in every
+   period, only in the one that matters most (recent).
+3. The cached backtest history (2021-2026) spans exactly one bull leg and
+   one choppy leg — the regime filter's *direction* is well-supported by
+   established practice (Minervini, CANSLIM aren't new ideas), but its
+   *measured magnitude* here is sample-limited to one market cycle, not
+   many. Don't treat the numbers above as proven across cycles.
 
 ## Strategy summary
 
@@ -202,10 +302,11 @@ swing_agent/
   data/
     market_data.py        # historical/live OHLCV fetch (yfinance for backtest, Kite for live)
   strategy/
-    screener.py            # breakout strategy: stock shortlist filters
+    screener.py            # breakout strategy: stock shortlist filters + regime/RS gates
     breakout.py             # breakout strategy: price-action entry/exit rules
-    mean_reversion.py        # mean-reversion strategy: screen + signal + exit rules
-    indicators.py             # shared RSI/SMA/MACD/ATR helpers
+    regime.py                 # market-regime + relative-strength filters (breakout only)
+    mean_reversion.py          # mean-reversion strategy: screen + signal + exit rules (parked)
+    indicators.py                # shared RSI/SMA/MACD/ATR helpers
   risk/
     position_sizing.py         # position sizing + exposure limits (shared)
   notify/
@@ -284,14 +385,22 @@ retail algo strategies, may need to be registered with your broker.
 | `screener_mode` | breakout only: `simple` (recommended) or `full` (Kar-style) | `simple` |
 | `trend_sma_period` | `simple` screener / mean-reversion: trend filter SMA length | `200` |
 | `min_avg_volume` | liquidity floor, avg shares/day (both strategies) | `200000` |
-| `lookback_range_days` | breakout: Donchian lookback window | `20` |
+| `lookback_range_days` | breakout: Donchian lookback window (positional: 55, swing was 20) | `55` |
 | `rsi_min` / `rsi_max` | `full` screener: RSI band | `50` / `70` |
 | `sma_period` | `full` screener: shorter trend filter SMA length | `26` |
 | `volume_surge_multiple` | `full` screener: min volume vs. 20-day average to qualify | `1.5` |
 | `stop_method` | breakout: `atr` (recommended) or `candle` (Kar-style) | `atr` |
-| `atr_stop_multiple` | `atr` stop mode: stop distance in ATR multiples | `2.5` |
+| `atr_stop_multiple` | `atr` stop mode: stop distance in ATR multiples (positional: 4.0, swing was 2.5) | `4.0` |
 | `use_fixed_target` | breakout: `false` (recommended, let stop trail) or `true` (Kar-style fixed target) | `false` |
-| `mr_ma_period` / `mr_atr_period` | mean-reversion: short MA/ATR periods for the pullback band | `5` / `5` |
+| `trail_after_r_multiple` | start trailing once profit reaches this many R (positional: 2.0, swing was 1.0) | `2.0` |
+| `atr_trail_multiple` | trail distance in ATR multiples once armed (positional: 3.5, swing was 2.0) | `3.5` |
+| `use_regime_filter` | only trade when the benchmark index is above its own SMA — see [Regime & relative-strength filters](#regime--relative-strength-filters) | `true` |
+| `regime_index_symbol` | benchmark index, match to your `universe_file` (`^NSEI` Nifty 50 / `^CNX200` Nifty 200) | `^NSEI` |
+| `regime_sma_period` | SMA length for the regime check | `200` |
+| `use_relative_strength_filter` | only trade stocks outperforming the benchmark index (IBD-style RS) | `true` |
+| `rs_lookback_days` | lookback for the relative-strength calculation | `252` |
+| `rs_min_relative_return` | minimum RS margin over the index to pass | `0.0` |
+| `mr_ma_period` / `mr_atr_period` | mean-reversion (parked, see top of README): short MA/ATR periods for the pullback band | `5` / `5` |
 | `mr_entry_atr_multiple` | mean-reversion: signal threshold, `MA5 - N×ATR5` | `1.0` |
 | `mr_limit_atr_multiple` | mean-reversion: next-day limit price offset | `0.75` |
 | `mr_stop_atr_multiple` | mean-reversion: hard stop offset | `2.0` |

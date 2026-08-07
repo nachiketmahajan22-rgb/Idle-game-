@@ -12,6 +12,8 @@ from __future__ import annotations
 import logging
 from datetime import datetime, timezone
 
+import pandas as pd
+
 from swing_agent.broker.base import BrokerInterface
 from swing_agent.broker.paper_broker import PaperBroker
 from swing_agent.config import Config, load_config
@@ -102,15 +104,17 @@ def manage_exits_breakout(config: Config, broker: BrokerInterface, state: Strate
                 logger.info("trailed stop for %s: %.2f -> %.2f", pos.symbol, pos.stop_loss, new_stop)
 
 
-def find_new_entries_breakout(config: Config, broker: BrokerInterface, state: StrategyState, universe: dict) -> list[str]:
+def find_new_entries_breakout(config: Config, broker: BrokerInterface, state: StrategyState, universe: dict, index_history: pd.DataFrame | None = None) -> list[str]:
     # Screen using data up to (not including) today's bar, then confirm the
     # breakout trigger on today's full bar. Kar's process is shortlist-the-
     # setup-first, then-wait-for-the-trigger — not simultaneous. Checking
     # the screener's RSI band on the same bar as the breakout itself would
     # reject most real breakouts, since a genuine breakout pop naturally
-    # pushes RSI up as it happens.
+    # pushes RSI up as it happens. The regime/RS check uses the same
+    # "through yesterday" slice of the benchmark index, for the same reason.
     screening_universe = {sym: df.iloc[:-1] for sym, df in universe.items() if len(df) > 1}
-    results = run_screener(screening_universe, config)
+    index_upto_yesterday = index_history.iloc[:-1] if index_history is not None and len(index_history) > 1 else None
+    results = run_screener(screening_universe, config, index_ohlcv=index_upto_yesterday)
     shortlisted = shortlist(results)
     logger.info("screener: %d/%d symbols shortlisted", len(shortlisted), len(results))
 
@@ -350,8 +354,20 @@ def run_daily_cycle(config: Config | None = None) -> None:
         logger.info("=== run complete: %d open positions, %d filled today, %d new signals queued for tomorrow ===",
                     state.count_open(), len(filled), len(signaled))
     elif config.strategy_style == "breakout":
+        index_history = None
+        if config.use_regime_filter or config.use_relative_strength_filter:
+            from swing_agent.data.market_data import fetch_history_yfinance
+            index_history = fetch_history_yfinance(config.regime_index_symbol, period="max")
+            if index_history.empty:
+                raise RuntimeError(
+                    f"use_regime_filter/use_relative_strength_filter is enabled but no data "
+                    f"came back for regime_index_symbol={config.regime_index_symbol!r} — refusing "
+                    f"to trade without the regime check it's configured to require."
+                )
+            logger.info("loaded %d bars for benchmark index %s", len(index_history), config.regime_index_symbol)
+
         manage_exits_breakout(config, broker, state, universe)
-        opened = find_new_entries_breakout(config, broker, state, universe)
+        opened = find_new_entries_breakout(config, broker, state, universe, index_history)
         logger.info("=== run complete: %d open positions, %d new entries this run ===",
                     state.count_open(), len(opened))
     else:

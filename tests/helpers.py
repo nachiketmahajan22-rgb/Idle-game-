@@ -24,6 +24,8 @@ def make_config(**overrides) -> Config:
         breakout_confirmation="close", stop_method="candle", atr_stop_multiple=2.5,
         use_fixed_target=True, trail_after_r_multiple=1.0,
         trail_method="breakeven", atr_period=14, atr_trail_multiple=2.0,
+        use_regime_filter=False, regime_index_symbol="^NSEI", regime_sma_period=200,
+        use_relative_strength_filter=False, rs_lookback_days=252, rs_min_relative_return=0.0,
         universe_file="config/watchlist.csv", broker="paper",
         live_trading=False, live_trading_env=False, order_product="CNC",
         order_type="MARKET", allow_shorts=True, notify_telegram=False,

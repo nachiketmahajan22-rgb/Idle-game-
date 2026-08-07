@@ -74,6 +74,14 @@ class Config:
     atr_period: int
     atr_trail_multiple: float
 
+    # Market regime & relative-strength filters (breakout only, off by default)
+    use_regime_filter: bool
+    regime_index_symbol: str      # benchmark index, e.g. "^NSEI" (Nifty 50) or "^CNX200" (Nifty 200)
+    regime_sma_period: int
+    use_relative_strength_filter: bool
+    rs_lookback_days: int
+    rs_min_relative_return: float
+
     # Universe
     universe_file: str
 
@@ -147,17 +155,23 @@ def load_config(settings_path: str | Path = REPO_ROOT / "config" / "settings.yam
         rsi_max=float(raw.get("rsi_max", 70)),
         sma_period=int(raw.get("sma_period", 26)),
         volume_surge_multiple=float(raw.get("volume_surge_multiple", 1.5)),
-        lookback_range_days=int(raw.get("lookback_range_days", 20)),
+        lookback_range_days=int(raw.get("lookback_range_days", 55)),
         trend_sma_period=int(raw.get("trend_sma_period", 200)),
         min_avg_volume=float(raw.get("min_avg_volume", 200000)),
         breakout_confirmation=str(raw.get("breakout_confirmation", "close")),
         stop_method=str(raw.get("stop_method", "atr")),
-        atr_stop_multiple=float(raw.get("atr_stop_multiple", 2.5)),
+        atr_stop_multiple=float(raw.get("atr_stop_multiple", 4.0)),
         use_fixed_target=bool(raw.get("use_fixed_target", False)),
-        trail_after_r_multiple=float(raw.get("trail_after_r_multiple", 1.0)),
+        trail_after_r_multiple=float(raw.get("trail_after_r_multiple", 2.0)),
         trail_method=str(raw.get("trail_method", "breakeven")),
         atr_period=int(raw.get("atr_period", 14)),
-        atr_trail_multiple=float(raw.get("atr_trail_multiple", 2.0)),
+        atr_trail_multiple=float(raw.get("atr_trail_multiple", 3.5)),
+        use_regime_filter=bool(raw.get("use_regime_filter", False)),
+        regime_index_symbol=str(raw.get("regime_index_symbol", "^NSEI")),
+        regime_sma_period=int(raw.get("regime_sma_period", 200)),
+        use_relative_strength_filter=bool(raw.get("use_relative_strength_filter", False)),
+        rs_lookback_days=int(raw.get("rs_lookback_days", 252)),
+        rs_min_relative_return=float(raw.get("rs_min_relative_return", 0.0)),
         universe_file=str(raw.get("universe_file", "config/watchlist.csv")),
         broker=str(raw.get("broker", "paper")),
         live_trading=bool(raw.get("live_trading", False)),

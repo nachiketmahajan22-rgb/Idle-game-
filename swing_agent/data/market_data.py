@@ -45,6 +45,11 @@ def load_universe_symbols(config: Config) -> list[str]:
 
 
 def _to_yfinance_ticker(nse_symbol: str) -> str:
+    if nse_symbol.startswith("^"):
+        # Index/VIX tickers (e.g. "^NSEI" Nifty 50, "^CNX200" Nifty 200,
+        # "^INDIAVIX") aren't NSE equity symbols -- Yahoo already indexes
+        # them under their bare ticker, no ".NS" suffix.
+        return nse_symbol
     return f"{nse_symbol}.NS"
 
 
