@@ -35,7 +35,9 @@ use_fixed_target: false        # false (recommended): no fixed take-profit, let 
                                  # stop harvest the trade -- standard trend-following practice.
                                  # true = Kar-style fixed target (range height projected from entry).
 trail_after_r_multiple: 1.0    # start trailing stop once trade is up 1R
-trail_method: breakeven        # 'breakeven' or 'atr'
+trail_method: breakeven        # 'breakeven' = floor at entry once armed, then keeps
+                                # ratcheting up via ATR as price extends (never freezes).
+                                # 'atr' = pure ATR trail, no explicit breakeven floor.
 atr_period: 14
 atr_trail_multiple: 2.0
 

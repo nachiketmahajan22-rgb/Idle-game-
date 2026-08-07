@@ -60,7 +60,7 @@ def test_update_trailing_stop_does_not_trail_before_threshold():
     assert new_stop == 95.0  # no profit yet, stop untouched
 
 
-def test_update_trailing_stop_moves_to_breakeven_after_threshold():
+def test_update_trailing_stop_moves_to_at_least_breakeven_after_threshold():
     config = make_config(trail_after_r_multiple=1.0, trail_method="breakeven")
     dates = pd.date_range("2024-01-01", periods=15, freq="B")
     closes = [100.0] * 14 + [106.0]  # last close is 1R above entry (entry=100, stop=95, risk=5)
@@ -72,18 +72,51 @@ def test_update_trailing_stop_moves_to_breakeven_after_threshold():
         side="long", entry_price=100.0, initial_stop=95.0, current_stop=95.0,
         ohlcv=ohlcv, config=config,
     )
-    assert new_stop == 100.0  # trailed to breakeven
+    assert new_stop >= 100.0  # locked in at least breakeven
+
+
+def test_breakeven_trail_keeps_ratcheting_beyond_entry_as_price_extends():
+    """Regression test: 'breakeven' must not freeze at entry_price forever
+    once armed -- it should keep advancing via ATR as the trade extends
+    further, or every trade could only ever realize a loss or a $0
+    scratch (the original bug, caught via backtesting)."""
+    config = make_config(trail_after_r_multiple=1.0, trail_method="breakeven", atr_period=5, atr_trail_multiple=1.0)
+    dates = pd.date_range("2024-01-01", periods=20, freq="B")
+    # steadily rising closes with real daily range, well past the 1R threshold
+    closes = [100.0 + i for i in range(20)]
+    highs = [c + 1 for c in closes]
+    lows = [c - 1 for c in closes]
+    ohlcv = pd.DataFrame({
+        "open": closes, "high": highs, "low": lows, "close": closes, "volume": [100_000] * 20,
+    }, index=dates)
+
+    stop_at_first_arm = update_trailing_stop(
+        side="long", entry_price=100.0, initial_stop=95.0, current_stop=95.0,
+        ohlcv=ohlcv.iloc[:6], config=config,
+    )
+    assert stop_at_first_arm >= 100.0
+
+    stop_after_further_rally = update_trailing_stop(
+        side="long", entry_price=100.0, initial_stop=95.0, current_stop=stop_at_first_arm,
+        ohlcv=ohlcv, config=config,
+    )
+    assert stop_after_further_rally > stop_at_first_arm, (
+        "breakeven trail froze instead of continuing to ratchet up with price"
+    )
 
 
 def test_update_trailing_stop_never_widens_risk():
     config = make_config(trail_after_r_multiple=1.0, trail_method="breakeven")
-    dates = pd.date_range("2024-01-01", periods=15, freq="B")
-    closes = [100.0] * 15
+    dates = pd.date_range("2024-01-01", periods=20, freq="B")
+    # gentle rise with real daily range -> ATR-based candidate lands below
+    # current_stop, which must therefore be preserved, not lowered.
+    closes = [90.0 + i * 0.3 for i in range(19)] + [100.0]
+    highs = [c + 1.5 for c in closes]
+    lows = [c - 1.5 for c in closes]
     ohlcv = pd.DataFrame({
-        "open": closes, "high": closes, "low": closes, "close": closes, "volume": [100_000] * 15,
+        "open": closes, "high": highs, "low": lows, "close": closes, "volume": [100_000] * 20,
     }, index=dates)
 
-    # current_stop is already above breakeven candidate -> must not be lowered
     new_stop = update_trailing_stop(
         side="long", entry_price=90.0, initial_stop=85.0, current_stop=98.0,
         ohlcv=ohlcv, config=config,

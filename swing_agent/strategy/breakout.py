@@ -132,7 +132,20 @@ def update_trailing_stop(
     """Returns the new stop-loss for an open position. Never returns a stop
     that would widen risk (long: never lower than current_stop; short:
     never higher) — trailing only ever tightens, per Kar's rule that a stop
-    is only touched to lock in profit, never to give a trade more room."""
+    is only touched to lock in profit, never to give a trade more room.
+
+    `trail_method: 'breakeven'` locks the stop at entry once the trade
+    reaches `trail_after_r_multiple`, *then keeps ratcheting it up via ATR*
+    as price extends further — breakeven is a floor it will never fall
+    below, not a permanent freeze. (An earlier version returned a constant
+    `entry_price` candidate forever once armed, which meant a trade could
+    never close as a realized win: it either stopped out for a loss, ran
+    unrealized indefinitely, or gave back to exactly breakeven for a $0
+    scratch. Caught via backtesting — every trade in a real run exited via
+    stop_loss_hit, ~40% at a price identical to entry to the last decimal.)
+    `trail_method: 'atr'` trails continuously by ATR with no breakeven
+    floor, so it can sit below entry briefly on a fresh, volatile breakout.
+    """
     close = float(ohlcv["close"].iloc[-1])
     risk_per_share = abs(entry_price - initial_stop)
     if risk_per_share <= 0:
@@ -142,13 +155,20 @@ def update_trailing_stop(
     if r_multiple < config.trail_after_r_multiple:
         return current_stop  # not yet in enough profit to trail
 
-    if config.trail_method == "breakeven":
-        candidate = entry_price
-    elif config.trail_method == "atr":
-        atr_val = float(ind.atr(ohlcv["high"], ohlcv["low"], ohlcv["close"], config.atr_period).iloc[-1])
-        candidate = close - config.atr_trail_multiple * atr_val if side == "long" else close + config.atr_trail_multiple * atr_val
+    if config.trail_method not in ("breakeven", "atr"):
+        raise ValueError(f"unknown trail_method: {config.trail_method!r} (expected 'breakeven' or 'atr')")
+
+    atr_series = ind.atr(ohlcv["high"], ohlcv["low"], ohlcv["close"], config.atr_period)
+    atr_val = float(atr_series.iloc[-1]) if pd.notna(atr_series.iloc[-1]) else None
+
+    if atr_val is None:
+        # Not enough history for ATR yet -- fall back to the breakeven floor
+        # alone (for 'breakeven') or hold the current stop (for 'atr').
+        candidate = entry_price if config.trail_method == "breakeven" else current_stop
     else:
-        raise ValueError(f"unknown trail_method: {config.trail_method}")
+        atr_candidate = close - config.atr_trail_multiple * atr_val if side == "long" else close + config.atr_trail_multiple * atr_val
+        candidate = (max(entry_price, atr_candidate) if side == "long" else min(entry_price, atr_candidate)) \
+            if config.trail_method == "breakeven" else atr_candidate
 
     if side == "long":
         return max(current_stop, candidate)
