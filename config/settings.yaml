@@ -9,15 +9,31 @@ max_daily_loss_pct: 0.03     # stop opening new trades after losing 3% of capita
 reward_risk_min: 1.5         # skip signals with reward:risk below this
 
 # --- Screener thresholds (stock shortlist) ---
-rsi_period: 14
+# screener_mode: simple (recommended) = trend filter + liquidity floor only.
+#   Fewer, more robust conditions -> less overfit to backtest noise.
+# screener_mode: full = the original Kar-style stack (RSI band, SMA, MACD,
+#   volume surge, near-range check) -- kept for comparison/backtesting.
+screener_mode: simple
+trend_sma_period: 200          # "simple" mode: only trade stocks above their 200-day trend
+min_avg_volume: 200000          # "simple" mode: liquidity floor, avg shares/day over 20 days
+rsi_period: 14                   # "full" mode only, below
 rsi_min: 50
 rsi_max: 70
-sma_period: 26                # Kar references the 26 SMA for index entries/exits
-volume_surge_multiple: 1.5    # today's volume vs 20-day average volume
-lookback_range_days: 20       # "previous month" range approximation (trading days)
+sma_period: 26                    # "full" mode's shorter trend check (Kar references 26 SMA)
+volume_surge_multiple: 1.5         # "full" mode: today's volume vs 20-day average
+lookback_range_days: 20              # Donchian/breakout lookback (both modes) -- "N-day high breakout"
 
 # --- Breakout entry rules ---
 breakout_confirmation: close   # 'close' = candle must close beyond the range (fewer false breakouts)
+# stop_method: atr (recommended) = entry -/+ atr_stop_multiple x ATR. Scales
+#   with the stock's actual volatility -- never accidentally tiny like a
+#   single candle's wick can be.
+# stop_method: candle = original Kar-style stop at the breakout bar's low/high.
+stop_method: atr
+atr_stop_multiple: 2.5
+use_fixed_target: false        # false (recommended): no fixed take-profit, let the trailing
+                                 # stop harvest the trade -- standard trend-following practice.
+                                 # true = Kar-style fixed target (range height projected from entry).
 trail_after_r_multiple: 1.0    # start trailing stop once trade is up 1R
 trail_method: breakeven        # 'breakeven' or 'atr'
 atr_period: 14

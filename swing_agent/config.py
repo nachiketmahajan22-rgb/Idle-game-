@@ -33,15 +33,21 @@ class Config:
     reward_risk_min: float
 
     # Screener
+    screener_mode: str          # "simple" (recommended) or "full"
     rsi_period: int
     rsi_min: float
     rsi_max: float
     sma_period: int
     volume_surge_multiple: float
     lookback_range_days: int
+    trend_sma_period: int        # "simple" mode: long-term trend filter (e.g. 200)
+    min_avg_volume: float         # "simple" mode: liquidity floor (avg shares/day)
 
     # Breakout / trailing
     breakout_confirmation: str
+    stop_method: str              # "atr" (recommended) or "candle"
+    atr_stop_multiple: float
+    use_fixed_target: bool         # False (recommended): let the trailing stop harvest the trade
     trail_after_r_multiple: float
     trail_method: str
     atr_period: int
@@ -100,13 +106,19 @@ def load_config(settings_path: str | Path = REPO_ROOT / "config" / "settings.yam
         max_open_positions=int(raw.get("max_open_positions", 5)),
         max_daily_loss_pct=float(raw.get("max_daily_loss_pct", 0.03)),
         reward_risk_min=float(raw.get("reward_risk_min", 1.5)),
+        screener_mode=str(raw.get("screener_mode", "simple")),
         rsi_period=int(raw.get("rsi_period", 14)),
         rsi_min=float(raw.get("rsi_min", 50)),
         rsi_max=float(raw.get("rsi_max", 70)),
         sma_period=int(raw.get("sma_period", 26)),
         volume_surge_multiple=float(raw.get("volume_surge_multiple", 1.5)),
         lookback_range_days=int(raw.get("lookback_range_days", 20)),
+        trend_sma_period=int(raw.get("trend_sma_period", 200)),
+        min_avg_volume=float(raw.get("min_avg_volume", 200000)),
         breakout_confirmation=str(raw.get("breakout_confirmation", "close")),
+        stop_method=str(raw.get("stop_method", "atr")),
+        atr_stop_multiple=float(raw.get("atr_stop_multiple", 2.5)),
+        use_fixed_target=bool(raw.get("use_fixed_target", False)),
         trail_after_r_multiple=float(raw.get("trail_after_r_multiple", 1.0)),
         trail_method=str(raw.get("trail_method", "breakeven")),
         atr_period=int(raw.get("atr_period", 14)),

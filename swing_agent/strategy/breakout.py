@@ -1,6 +1,24 @@
-"""Pure price-action entry/exit trigger — Kar's core, indicator-free method:
-a daily close beyond the prior range (previous day's high/low, or the
-`lookback_range_days` window approximating "previous month's range").
+"""Entry trigger: a daily close beyond the prior `lookback_range_days`-day
+range (a Donchian-channel breakout — the same mechanic as Kar's "close
+beyond previous day/month's range" and the classic Turtle Trading entry).
+
+Two config-driven choices affect *where the stop and target go*, not
+whether a breakout fires:
+
+  - `stop_method: atr` (recommended default): stop = entry -/+
+    `atr_stop_multiple` x ATR. Scales with the stock's actual volatility,
+    so it's never accidentally tiny the way a single candle's wick can be
+    (a skinny wick gives a razor-thin stop, which forces a huge
+    risk-sized position — a real bug this replaced).
+    `stop_method: candle` (Kar-style): stop at the breakout bar's opposite
+    extreme (low for longs, high for shorts).
+
+  - `use_fixed_target: false` (recommended default): no fixed take-profit;
+    the trailing stop harvests the trade, letting winners run — standard
+    trend-following practice, since a fixed target caps upside on the
+    trades that matter most.
+    `use_fixed_target: true` (Kar-style): projects the range height above
+    entry as a fixed target.
 
 This module only decides *if/where* to enter and *where* the initial stop
 goes; `swing_agent/risk/position_sizing.py` turns that into a share
@@ -36,7 +54,11 @@ def detect_breakout(symbol: str, ohlcv: pd.DataFrame, config: Config) -> Breakou
     trading day after the close (or, per Kar's timing guidance, near the
     end of the session on the live/forming bar if you want same-day fills).
     """
-    if len(ohlcv) < config.lookback_range_days + 2:
+    min_history = config.lookback_range_days
+    if config.stop_method == "atr":
+        min_history = max(min_history, config.atr_period)
+    min_history += 2
+    if len(ohlcv) < min_history:
         return BreakoutSignal(symbol, False, reason="insufficient history")
 
     high, low, close = ohlcv["high"], ohlcv["low"], ohlcv["close"]
@@ -59,24 +81,39 @@ def detect_breakout(symbol: str, ohlcv: pd.DataFrame, config: Config) -> Breakou
     if range_height <= 0:
         return BreakoutSignal(symbol, False, reason="degenerate range (high <= low)")
 
+    atr_val = None
+    if config.stop_method == "atr":
+        atr_val = float(ind.atr(high, low, close, config.atr_period).iloc[-1])
+        if pd.isna(atr_val) or atr_val <= 0:
+            return BreakoutSignal(symbol, False, reason="ATR not yet available")
+
     if check_price > prior_high:
-        # Long breakout: stop below the breakout bar's low (Kar's rule: stop
-        # placed at the setup's structural invalidation point, never moved
-        # against the trade), target projects the range height above entry.
         entry = last_close
-        stop = last_low
+        if config.stop_method == "atr":
+            stop = entry - config.atr_stop_multiple * atr_val
+        elif config.stop_method == "candle":
+            # Kar-style: stop at the breakout bar's low (the setup's
+            # structural invalidation point), never moved against the trade.
+            stop = last_low
+        else:
+            raise ValueError(f"unknown stop_method: {config.stop_method!r} (expected 'atr' or 'candle')")
         if stop >= entry:
-            return BreakoutSignal(symbol, False, reason="breakout bar low is not below close; unsafe stop")
-        target = entry + range_height
+            return BreakoutSignal(symbol, False, reason="computed stop is not below entry; unsafe stop")
+        target = entry + range_height if config.use_fixed_target else None
         return BreakoutSignal(symbol, True, side="long", entry_price=entry, stop_loss=stop, target_price=target,
                                reason=f"close {entry:.2f} broke above prior range high {float(prior_high):.2f}")
 
     if check_price_short < prior_low:
         entry = last_close
-        stop = last_high
+        if config.stop_method == "atr":
+            stop = entry + config.atr_stop_multiple * atr_val
+        elif config.stop_method == "candle":
+            stop = last_high
+        else:
+            raise ValueError(f"unknown stop_method: {config.stop_method!r} (expected 'atr' or 'candle')")
         if stop <= entry:
-            return BreakoutSignal(symbol, False, reason="breakout bar high is not above close; unsafe stop")
-        target = entry - range_height
+            return BreakoutSignal(symbol, False, reason="computed stop is not above entry; unsafe stop")
+        target = entry - range_height if config.use_fixed_target else None
         return BreakoutSignal(symbol, True, side="short", entry_price=entry, stop_loss=stop, target_price=target,
                                reason=f"close {entry:.2f} broke below prior range low {float(prior_low):.2f}")
 

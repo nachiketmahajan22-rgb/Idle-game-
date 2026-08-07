@@ -1,21 +1,22 @@
-"""Stock shortlist ("correct stock selection" — the ~40% half of Kar's edge).
+"""Stock shortlist — the "correct stock selection" half of the strategy's
+edge. Two modes, selected by `config.screener_mode`:
 
-Approximates the public "Abhishek Kar Swing" Chartink screener's stated
-inputs (RSI, MACD, PE, breakout, volume) using plain OHLCV data:
+  - "simple" (recommended default): a long-term trend filter (price above
+    its `trend_sma_period` SMA, e.g. 200-day) plus a liquidity floor
+    (`min_avg_volume`). Two robust, well-established conditions instead of
+    five correlated indicator thresholds stacked together — fewer knobs
+    means less risk of curve-fitting the backtest and a strategy that's
+    easier to reason about when it's wrong.
 
-  - RSI in a bullish-but-not-overbought band (default 50-70): momentum is
-    turning up without being stretched.
-  - Price above its `sma_period` SMA: only trade with the trend.
-  - MACD histogram positive: momentum confirmation.
-  - Close within the configured lookback window's range breakout zone
-    (within touching distance of the prior high) OR already breaking out.
-  - Volume today (or most recent bar) above `volume_surge_multiple`x the
-    20-day average: institutional participation, not a low-volume drift.
+  - "full": approximates the public "Abhishek Kar Swing" Chartink
+    screener's stated inputs (RSI, MACD, breakout proximity, volume) using
+    plain OHLCV data. Kept for comparison/backtesting against the simple
+    mode, not because it's the recommended default.
 
 Fundamentals (PE, book value, dividend yield) aren't available from
 OHLCV alone. `fundamentals_lookup` is an optional callable
 (symbol -> dict) you can wire up to a data source; when absent, fundamental
-filters are simply skipped.
+filters are simply skipped. Only used by "full" mode.
 """
 from __future__ import annotations
 
@@ -38,24 +39,48 @@ class ScreenResult:
     sma: float | None = None
     macd_hist: float | None = None
     volume_ratio: float | None = None
+    avg_volume: float | None = None
     prior_range_high: float | None = None
     prior_range_low: float | None = None
 
 
-def screen_symbol(
-    symbol: str,
-    ohlcv: pd.DataFrame,
-    config: Config,
-    fundamentals_lookup: Optional[Callable[[str], dict]] = None,
-) -> ScreenResult:
-    """`ohlcv` must have columns: open, high, low, close, volume, sorted
-    ascending by date, and enough history to cover the longest lookback
-    (sma_period, lookback_range_days, rsi_period, macd 26+9)."""
+def _validate(ohlcv: pd.DataFrame) -> None:
     required_cols = {"open", "high", "low", "close", "volume"}
     missing = required_cols - set(ohlcv.columns)
     if missing:
         raise ValueError(f"ohlcv missing columns: {missing}")
 
+
+def _screen_simple(symbol: str, ohlcv: pd.DataFrame, config: Config) -> ScreenResult:
+    min_history = config.trend_sma_period + 1
+    if len(ohlcv) < min_history:
+        return ScreenResult(symbol, False, ["insufficient history"])
+
+    close = ohlcv["close"]
+    sma_series = ind.sma(close, config.trend_sma_period)
+    avg_vol_series = ohlcv["volume"].rolling(window=20, min_periods=20).mean()
+
+    last_close = float(close.iloc[-1])
+    last_sma = float(sma_series.iloc[-1]) if pd.notna(sma_series.iloc[-1]) else None
+    last_avg_vol = float(avg_vol_series.iloc[-1]) if pd.notna(avg_vol_series.iloc[-1]) else None
+
+    reasons: list[str] = []
+    if last_sma is None or last_close <= last_sma:
+        reasons.append(f"price not above {config.trend_sma_period}-day trend SMA")
+    if last_avg_vol is None or last_avg_vol < config.min_avg_volume:
+        got = f"{last_avg_vol:,.0f}" if last_avg_vol is not None else "n/a"
+        reasons.append(f"avg volume {got} below liquidity floor {config.min_avg_volume:,.0f}")
+
+    return ScreenResult(
+        symbol=symbol, passed=(len(reasons) == 0), reasons_failed=reasons,
+        close=last_close, sma=last_sma, avg_volume=last_avg_vol,
+    )
+
+
+def _screen_full(
+    symbol: str, ohlcv: pd.DataFrame, config: Config,
+    fundamentals_lookup: Optional[Callable[[str], dict]] = None,
+) -> ScreenResult:
     reasons: list[str] = []
 
     if len(ohlcv) < max(config.sma_period, config.lookback_range_days, config.rsi_period, 35) + 1:
@@ -115,6 +140,24 @@ def screen_symbol(
         prior_range_high=last_range_high,
         prior_range_low=last_range_low,
     )
+
+
+def screen_symbol(
+    symbol: str,
+    ohlcv: pd.DataFrame,
+    config: Config,
+    fundamentals_lookup: Optional[Callable[[str], dict]] = None,
+) -> ScreenResult:
+    """`ohlcv` must have columns: open, high, low, close, volume, sorted
+    ascending by date, with enough history for the active mode's longest
+    lookback ("simple": trend_sma_period; "full": sma_period/rsi_period/
+    lookback_range_days/MACD's 26+9)."""
+    _validate(ohlcv)
+    if config.screener_mode == "simple":
+        return _screen_simple(symbol, ohlcv, config)
+    if config.screener_mode == "full":
+        return _screen_full(symbol, ohlcv, config, fundamentals_lookup)
+    raise ValueError(f"unknown screener_mode: {config.screener_mode!r} (expected 'simple' or 'full')")
 
 
 def run_screener(
