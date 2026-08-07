@@ -1,0 +1,8 @@
+pandas>=2.0
+numpy>=1.24
+PyYAML>=6.0
+python-dotenv>=1.0
+requests>=2.31
+yfinance>=0.2.40
+kiteconnect>=5.0.1
+pytest>=7.4
